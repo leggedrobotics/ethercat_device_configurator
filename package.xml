@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+
+<package format="2">
+
+  <name>ethercat_device_configurator</name>
+  <version>0.6.0</version>
+  <description>Core C++ library to interface one or multiple drives. Contains abstract base classes for the communication interface.</description>
+
+  <license>Proprietary</license>
+  <author email="lnachtigall@ethz.ch">Lennart Nachtigall</author>
+  <maintainer email="lnachtigall@ethz.ch">Lennart Nachtigall</maintainer>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+
+  <depend>anydrive</depend>
+  <depend>elmo_ethercat_sdk</depend>
+
+</package>

@@ -1,0 +1,12 @@
+ethercat_master:
+    time_step: 0.0001
+    state_change_timeout: 100000
+    
+ethercat_devices:
+   - type:                     Anydrive
+     name:                     Dynadrive
+     configuration_file:       dynadrive.yaml
+     ethercat_bus:             enx00249b4f53e3 
+     ethercat_address:         1
+     ethercat_pdo_type:        C
+
