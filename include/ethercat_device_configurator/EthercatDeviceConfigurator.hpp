@@ -8,8 +8,10 @@
 class EthercatDeviceConfigurator
 {
 public:
+    //Convinience typedef for a shared pointer
     typedef std::shared_ptr<EthercatDeviceConfigurator> SharedPtr ;
 
+    //Type ethercat slave device. If you want to wire in a new slave device type, add an entry to this enum
     enum class EthercatSlaveType
     {
         Elmo,
@@ -27,13 +29,30 @@ public:
         std::string ethercat_bus;
         std::string ethercat_pdo_type;
     };
-
+    /**
+     * @brief EthercatDeviceConfigurator
+     * @param path - path to the setup.yaml
+     * @param startup - if true -> calls startup on all masters
+     */
     EthercatDeviceConfigurator(std::string path, bool startup = false);
-
+    /**
+     * @brief getMasters
+     * @return a vector of all masters
+     */
     std::vector<std::shared_ptr<ecat_master::EthercatMaster>> getMasters();
+    /**
+     * @brief getSlaves
+     * @return a vector of all slaves
+     */
     std::vector<std::shared_ptr<ecat_master::EthercatDrive>> getSlaves();
-
+    /**
+     * @brief getSlave - get a certain slave by its name
+     * @param name
+     * @return
+     */
     std::shared_ptr<ecat_master::EthercatDrive> getSlave(std::string name);
+
+    std::shared_ptr<ecat_master::EthercatMaster> master();
 
 private:
     ecat_master::EthercatMasterConfiguration m_master_configuration;
@@ -47,4 +66,7 @@ private:
 
     void parseFile(std::string path);
     void setup(bool startup);
+    std::string handleFilePath(const std::string& path, const std::string &setup_file_path) const;
+
+    std::string m_setup_file_path ="";
 };

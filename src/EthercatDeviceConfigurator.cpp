@@ -2,9 +2,11 @@
 
 /*Anydrives*/
 #include "anydrive/AnydriveEthercatSlave.hpp"
+#include "anydrive/configuration/AnydriveConfigurationParser.hpp"
 
 /*Elmo*/
 #include "elmo_ethercat_sdk/Elmo.hpp"
+#include "elmo_ethercat_sdk/ConfigurationParser.hpp"
 
 /*yaml-cpp*/
 #include "yaml-cpp/yaml.h"
@@ -13,9 +15,10 @@
 #include <filesystem>
 
 
-EthercatDeviceConfigurator::EthercatDeviceConfigurator(std::string path, bool startup)
+EthercatDeviceConfigurator::EthercatDeviceConfigurator(std::string path, bool startup):
+    m_setup_file_path(path)
 {
-    parseFile(path);
+    parseFile(m_setup_file_path);
     setup(startup);
 
 
@@ -39,6 +42,17 @@ std::shared_ptr<ecat_master::EthercatDrive> EthercatDeviceConfigurator::getSlave
             return slave;
     }
     throw std::runtime_error("Slave: "+name + " not found");
+}
+
+std::shared_ptr<ecat_master::EthercatMaster> EthercatDeviceConfigurator::master()
+{
+    if(m_masters.size() > 1)
+        throw std::runtime_error("More than one master configured, use getMasters instead of master");
+
+    if(m_masters.empty())
+        throw std::out_of_range("No master configured");
+
+    return m_masters[0];
 }
 
 void EthercatDeviceConfigurator::parseFile(std::string path)
@@ -190,7 +204,14 @@ void EthercatDeviceConfigurator::setup(bool startup)
         case EthercatSlaveType::Elmo:
         {
             std::shared_ptr<elmo::Elmo> elmo_slave = std::make_shared<elmo::Elmo>();
-            //Todo parse configuration
+            //Parse configuration
+            //handleFilePath takes care of creating an absolute path from the path in the setup.yaml
+            std::string configuration_file_path = handleFilePath(entry.config_file_path,m_setup_file_path);
+
+
+            elmo::ConfigurationParser parser(configuration_file_path);
+            const auto configuration = parser.getConfiguration();
+            elmo_slave->loadConfiguration(configuration);
             slave = elmo_slave;
         }
             break;
@@ -221,7 +242,16 @@ void EthercatDeviceConfigurator::setup(bool startup)
 
             std::shared_ptr<anydrive::AnydriveEthercatSlave> anydrive_slave = std::make_shared<anydrive::AnydriveEthercatSlave>(entry.ethercat_address,pdo);
 
-            //TODO parse configuration
+            //Parse configuration
+            //handleFilePath takes care of creating an absolute path from the path in the setup.yaml
+            std::string configuration_file_path = handleFilePath(entry.config_file_path,m_setup_file_path);
+
+
+            const auto configuration = anydrive::AnydriveConfigurationParser::fromFile(configuration_file_path);
+
+            //Apply configuration to anydrive
+            anydrive_slave->applyConfiguration(configuration);
+
             slave = anydrive_slave;
         }
             break;
@@ -294,4 +324,30 @@ void EthercatDeviceConfigurator::setup(bool startup)
 
 
 
+}
+
+std::string EthercatDeviceConfigurator::handleFilePath(const std::string &path, const std::string &setup_file_path) const
+{
+    std::string result_path = "";
+    if (path.front() == '/')
+    {
+        result_path = path;
+        // Path to the configuration file is absolute, we can use it as is.
+    }
+    else if (path.front() == '~')
+    {
+        // Path to the configuration file is absolute, we need to replace '~' with the home directory.
+        const char* homeDirectory = getenv("HOME");
+        if (homeDirectory == nullptr)
+            throw std::runtime_error("Environment variable 'HOME' could not be evaluated.");
+        result_path = path;
+        result_path.erase(result_path.begin());
+        result_path = homeDirectory + result_path;
+    }
+    else
+    {
+        // Path to the configuration file is relative, we need to append it to the path of the setup file.
+        result_path = setup_file_path.substr(0, setup_file_path.find_last_of("/")+1) + path;
+    }
+    return  result_path;
 }

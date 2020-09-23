@@ -5,7 +5,7 @@ ethercat_master:
 ethercat_devices:
    - type:                     Anydrive
      name:                     Dynadrive
-     configuration_file:       dynadrive.yaml
+     configuration_file:       device_configurations/anydrive.yaml
      ethercat_bus:             enx00249b4f53e3 
      ethercat_address:         1
      ethercat_pdo_type:        C

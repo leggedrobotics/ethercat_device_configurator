@@ -1,0 +1,542 @@
+###############################################################################
+# This is an ANYdrive configuration file                                      #
+###############################################################################
+
+# The behavior of each ANYdrive can be configured flexibly to fulfill the needs
+# of its application. There are two ways to configure an ANYdrive:
+# 1. Permanently change the configuration which is stored on its local flash
+#    memory, e.g. using the ANYdrive Studio software.
+# 2. Temporarily change the configuration using this configuration file or the
+#    anydrive::configuration::Configuration class which contain the same
+#    information. This information is sent in the Configure state and lost
+#    whenever the ANYdrive is restarted. 
+
+# Parameter                         max_command_age
+# Description                       If the command's age exceeds this duration, 
+#                                   it is not sent.
+# Usage                             SDK
+# Type                              double
+# Unit                              s
+# Range                             [0.0, .inf)
+# Default                           .inf
+max_command_age:                    .inf
+
+# Parameter                         auto_stage_last_command
+# Description                       The commands are sent continuously to the
+#                                   ANYdrive. If the parameter is true, the
+#                                   last command is automatically staged.
+#                                   (saved for sending).
+# Usage                             SDK
+# Type                              bool
+# Unit                              -
+# Range                             {true, false}
+# Default                           true
+auto_stage_last_command:            true
+
+# Parameter                         set_reading_to_nan_on_disconnect
+# Description                       If this parameter is true, the reading
+#                                   values are set to NaN when a drive 
+#                                   disconnects. Otherwise the last values
+#                                   which were received are kept.
+# Usage                             SDK
+# Type                              bool
+# Unit                              -
+# Range                             {true, false}
+# Default                           true
+set_reading_to_nan_on_disconnect:   true
+
+# Parameter                         error_state_behavior
+# Description                       This value defines the ANYdrive's behavior
+#                                   in the Error state.
+#                                   0 = freeze the motor
+#                                   1 = disable the motor
+# Usage                             Firmware
+# Type                              uint16
+# Unit                              -
+# Range                             {0, 1}
+# Default                           Value stored on device.
+error_state_behavior:               0
+
+# Parameter                         max_current
+# Description                       Sets the maximal current the motor may apply.
+#                                   Used in all control modes.
+# Usage                             Firmware
+# Type                              double
+# Unit                              A
+# Range                             > 0.0
+# Default                           Value stored on device.
+max_current:                        28.0
+
+# Parameter                         max_freeze_current
+# Description                       Sets the maximal current for the freeze controller.
+#                                   Has only an effect if lower than max_current.
+# Usage                             Firmware
+# Type                              double
+# Unit                              A
+# Range                             > 0.0
+# Default                           Value stored on device.
+max_freeze_current:                 15.0
+
+# Parameter                         max_motor_velocity
+# Description                       Sets the maximal velocity of the motor. Only 
+#                                   used in MotorVelocity control mode.
+# Usage                             Firmware
+# Type                              double
+# Unit                              rad/s
+# Range                             > 0.0
+# Default                           Value stored on device.
+max_motor_velocity:                 680.7
+
+# Parameter                         max_joint_torque
+# Description                       Sets the maximal joint torque the actuator 
+#                                   may apply. Only used in series elastic 
+#                                   actuator control modes.
+# Usage                             Firmware
+# Type                              double
+# Unit                              Nm
+# Range                             > 0.0
+# Default                           Value stored on device.
+max_joint_torque:                   40.0
+
+# Parameter                         current_integrator_saturation
+# Description                       Sets the integrator saturation the current
+#                                   controller is limited to.
+# Usage                             Firmware
+# Type                              double
+# Unit                              A
+# Range                             > 0.0
+# Default                           Value stored on device.
+current_integrator_saturation:      28.0
+
+# Parameter                         joint_torque_integrator_saturation
+# Description                       Sets the integrator saturation the joint 
+#                                   torque controller is limited to.
+# Usage                             Firmware
+# Type                              double
+# Unit                              Nm
+# Range                             > 0.0
+# Default                           Value stored on device.
+joint_torque_integrator_saturation: 40.0
+
+# Parameter                         direction
+# Description                       This value defines the ANYdrive's direction
+#                                   of rotation. If changed, the zero gear and 
+#                                   joint zero positions remain the same, but
+#                                   position, velocity, torque and current
+#                                   values flip signs.
+#                                   -1 = clockwise
+#                                    1 = counter-clockwise
+# Usage                             Firmware
+# Type                              int16
+# Unit                              -
+# Range                             {-1, 1}
+# Default                           Value stored on device.
+direction:                          1
+
+# Parameter                         joint_position_limits
+# Description                       Map containing the joint position limits.
+# Usage                             SDK/device
+# Type                              Map
+# Unit                              -
+# Range                             -
+# Default                           As in this example.
+joint_position_limits:              
+
+  # Parameter                       sdk
+  # Description                     Map containing the joint position limits
+  #                                 used only in the SDK. If violated, user
+  #                                 defined error callback is called. The
+  #                                 ANYdrive is not affected by this limits.
+  # Usage                           SDK
+  # Type                            Map
+  # Unit                            -
+  # Range                           -
+  # Default                         As in this example.
+  sdk:                              
+
+    # Parameter                     min, max
+    # Description                   Minimal/maximal value of the SDK joint 
+    #                               position limits. If both values are set to
+    #                               0.0, the limits are open.
+    # Usage                         SDK
+    # Type                          double
+    # Unit                          rad
+    # Range                         (-.inf, .inf)
+    # Default                       0.0
+    min:                            0.0
+    max:                            0.0
+
+  # Parameter                       soft
+  # Description                     Map containing the soft joint position 
+  #                                 limits used on the ANYdrive. If violated,
+  #                                 the device switches to the Error state
+  #                                 (freeze resp. disable the motor).
+  # Usage                           Firmware
+  # Type                            Map
+  # Unit                            -
+  # Range                           -
+  # Default                         As in this example.
+  soft:                             
+
+    # Parameter                     min, max
+    # Description                   Minimal/maximal value of the soft joint 
+    #                               position limits. If both values are set to
+    #                               0.0, the limits are open.
+    # Usage                         Firmware
+    # Type                          double
+    # Unit                          rad
+    # Range                         (-.inf, .inf)
+    # Default                       Value stored on device.
+    min:                            0.0
+    max:                            0.0
+
+  # Parameter                       hard
+  # Description                     Map containing the hard joint position 
+  #                                 limits used on the ANYdrive. If violated,
+  #                                 the device switches to the Fatal state
+  #                                 (disable the motor).
+  # Usage                           Firmware
+  # Type                            Map
+  # Unit                            -
+  # Range                           -
+  # Default                         As in this example.
+  hard:                             
+
+    # Parameter                     min, max
+    # Description                   Minimal/maximal value of the hard joint 
+    #                               position limits. If both values are set to
+    #                               0.0, the limits are open.
+    # Usage                         Firmware
+    # Type                          double
+    # Unit                          rad
+    # Range                         (-.inf, .inf)
+    # Default                       Value stored on device.
+    min:                            0.0
+    max:                            0.0
+
+# Parameter                         joint_position_configurations
+# Description                       List containing the joint position
+#                                   configurations for this device.
+# Usage                             SDK
+# Type                              List
+# Unit                              -
+# Range                             -
+# Default                           []
+joint_position_configurations:      
+
+  # Parameter                       name
+  # Description                     Name of this joint position configuration.
+  # Usage                           SDK
+  # Type                            string
+  # Unit                            -
+  # Range                           -
+  # Default                         "zero"
+- name:                             "zero"
+
+  # Parameter                       value
+  # Description                     Goal joint position of this joint position
+  #                                 configuration.
+  # Usage                           SDK
+  # Type                            double
+  # Unit                            rad
+  # Range                           (-.inf, .inf)
+  # Default                         0.0
+  value:                            0.0
+
+# Parameter                         imu
+# Description                       Parameters to configure the IMU.
+# Usage                             Firmware
+# Type                              Map
+# Unit                              -
+# Range                             -
+# Default                           As in this example.
+imu:                                
+
+  # Parameter                       enable
+  # Description                     Enable/disable the IMU.
+  # Usage                           Firmware
+  # Type                            bool
+  # Unit                            -
+  # Range                           {true, false}
+  # Default                         Value stored on device.
+  enable:                           true
+
+  # Parameter                       accelerometer_range
+  # Description                     Sets the range of the IMU's accelerometer.
+  #                                 0 = +/- 2g
+  #                                 1 = +/- 4g
+  #                                 2 = +/- 8g
+  #                                 3 = +/- 16g
+  # Usage                           Firmware
+  # Type                            uint32
+  # Unit                            -
+  # Range                           {0, 1, 2, 3}
+  # Default                         Value stored on device.
+  accelerometer_range:              1
+
+  # Parameter                       accelerometer_range
+  # Description                     Sets the range of the IMU's gyroscope.
+  #                                 0 = +/- 250dps
+  #                                 1 = +/- 500dps
+  #                                 2 = +/- 1000dps
+  #                                 3 = +/- 2000dps
+  # Usage                           Firmware
+  # Type                            uint32
+  # Unit                            -
+  # Range                           {0, 1, 2, 3}
+  # Default                         Value stored on device.
+  gyroscope_range:                  1
+
+# Parameter                        fan
+# Description                      Parameters to configure the optional fan.
+# Usage                            Firmware
+# Type                             Map
+# Unit                             -
+# Range                            -
+# Default                          As in this example.
+fan:
+
+  # Parameter                      mode
+  # Description                    Fan mode.
+  #                                0 = OFF
+  #                                1 = Auto
+  #                                2 = Manual
+  # Usage                          Firmware
+  # Type                           uint32
+  # Unit                           -
+  # Range                          {0, 1, 2}
+  # Default                        Value stored on device.
+  mode:                            0
+
+  # Parameter                      intensity
+  # Description                    Fan intensity.
+  #                                0 = OFF
+  #                                1 = Minimum intensity
+  #                                10= Maximum intensity
+  # Usage                          Firmware
+  # Type                           uint32
+  # Unit                           -
+  # Range                          {0, ..., 10}
+  # Default                        Value stored on device.
+  intensity:                       0
+
+  # Parameter                      lower_temperature
+  # Description                    Fan lower temperature, this and the upper
+  #                                temperature are used in the auto mode to
+  #                                calculate the intensity with linear
+  #                                interpolation.
+  # Usage                          Firmware
+  # Type                           float
+  # Unit                           Degrees Celsius
+  # Default                        Value stored on device.
+  lower_temperature:               30.0
+
+  # Parameter                      upper_temperature
+  # Description                    Fan upper temperature, this and the lower
+  #                                temperature are used in the auto mode to
+  #                                calculate the intensity with linear
+  #                                interpolation.
+  # Usage                          Firmware
+  # Type                           float
+  # Unit                           Degrees Celsius
+  # Default                        Value stored on device.
+  upper_temperature:               50.0
+
+# List of the control modes. (optional)
+# Available controllers: ([] = empty)
+
+# Parameter                         modes
+# Description                       List of control modes containing the gains.
+# Usage                             Firmware
+# Type                              List
+# Unit                              -
+# Range                             -
+# Default                           Value stored on device.
+modes:                              
+
+  # Parameter                       name
+  # Description                     Name of this control mode.
+  # Usage                           Firmware
+  # Type                            string
+  # Unit                            -
+  # Range                           {"Current",
+  #                                  "MotorVelocity",
+  #                                  "GearPosition",
+  #                                  "GearVelocity",
+  #                                  "GearVelocity",
+  #                                  "JointPosition",
+  #                                  "JointPositionVelocity",
+  #                                  "JointPositionVelocityTorque",
+  #                                  "JointVelocity",
+  #                                  "JointTorque"}
+  # Default                         None (mandatory parameter)
+- name:                             "Current"
+
+  # Parameter                       gains
+  # Description                     Map containing the gains of this control
+  #                                 mode.
+  # Usage                           Firmware
+  # Type                            Map
+  # Unit                            -
+  # Range                           -
+  # Default                         None (mandatory parameter)
+  gains:                            
+
+    # Parameter                     p, i, d
+    # Description                   PID gains of this control mode.
+    # Usage                         Firmware
+    # Type                          double
+    # Unit                          -
+    # Range                         (-.inf, .inf)
+    # Default                       None (mandatory parameter)
+    p:                              0.6
+    i:                              0.16
+    d:                              0.0
+
+  # More control gains              
+- name:                             JointPosition
+  gains:                            
+    p:                              104.0
+    i:                              0.078
+    d:                              0.163
+
+- name:                             JointVelocity
+  gains:                            
+    p:                              0.15
+    i:                              0.00005
+    d:                              0.4
+
+- name:                             JointTorque
+  gains:                            
+    p:                              19.0
+    i:                              0.01
+    d:                              24.0
+
+# Parameter                         goal_states
+# Description                       Goal FSM states which ANYdrive tries to 
+#                                   transition to when the SDK is started up
+#                                   or shut down.
+# Usage                             SDK
+# Type                              Map
+# Unit                              -
+# Range                             -
+# Default                           As in this example.
+goal_states:                        
+
+  # Parameter                       startup, shutdown
+  # Description                     Goal FSM states for startup resp. shutdown.
+  #                                 Note that in case of a shutdown, the
+  #                                 ANYdrive is not allowed to remain in the
+  #                                 ControlOp state, as losing the communication
+  #                                 results in a transition to the Error state.
+  #                                 "Calibrate" = Go to the Calibrate state.
+  #                                 "Configure" = Go to the Configure state.
+  #                                 "ControlOp" = Go to the ControlOp state
+  #                                               (startup only).
+  #                                 "MotorOp"   = Go to the MotorOp state.
+  #                                 "NA"        = Remain in the current state.
+  #                                               If the current state is 
+  #                                               ControlOp and a shutdown is
+  #                                               requested, the device will go
+  #                                               to MotorOp.
+  #                                 "Standby"   = Go to the Standby state.
+  # Usage                           SDK
+  # Type                            string
+  # Unit                            -
+  # Range                           {"Calibrate",
+  #                                  "Configure",
+  #                                  "ControlOp",
+  #                                  "MotorOp",
+  #                                  "NA",
+  #                                  "Standby"}
+  # Default                         "NA"
+  startup:                          "NA"
+  shutdown:                         "NA"
+
+# Parameter                         gear_joint_velocity_filter
+# Description                       List containing gear and joint
+#                                   velocity filter parameters.
+# Usage                             Firmware
+# Type                              Map
+# Unit                              -
+# Range                             -
+# Default                           []
+gear_joint_velocity_filter:
+
+  # Parameter                       type
+  # Description                     Type of filter used for estimation.
+  #                                 0 - No filter.
+  #                                 1 - Kalman filter.
+  #                                 2 - EMA filter.
+  # Usage                           Firmware
+  # Type                            uint32
+  # Unit                            -
+  # Range                           {0, 1, 2}
+  # Default                         Value stored on device.
+  type:                             2
+
+  # Parameter                       kf_noise_variance
+  # Description                     Kalman filter variance parameter.
+  # Usage                           Firmware
+  # Type                            float
+  # Unit                            -
+  # Range                           [0.0, .inf]
+  # Default                         Value stored on device.
+  kf_noise_variance:                0.005
+
+  # Parameter                       kf_lambda_2
+  # Description                     Kalman filter lambda^2 parameter.
+  # Usage                           Firmware
+  # Type                            float
+  # Unit                            -
+  # Range                           [0.0, .inf]
+  # Default                         Value stored on device.
+  kf_lambda_2:                      1000.0
+
+  # Parameter                       kf_gamma
+  # Description                     Kalman filter gamma parameter.
+  # Usage                           Firmware
+  # Type                            float
+  # Unit                            -
+  # Range                           [0.0, .inf]
+  # Default                         Value stored on device.
+  kf_gamma:                         0.1
+
+  # Parameter                       ema_alpha
+  # Description                     EMA filter alpha parameter.
+  # Usage                           Firmware
+  # Type                            float
+  # Unit                            -
+  # Range                           [0.0, .inf]
+  # Default                         Value stored on device.
+  ema_alpha:                        0.1
+
+# Parameter                         joint_velocity_filter_for_acceleration
+# Description                       List containing joint velocity for
+#                                   acceleration filter parameters.
+# Usage                             Firmware
+# Type                              Map
+# Unit                              -
+# Range                             -
+# Default                           []
+joint_velocity_filter_for_acceleration:
+  type:                             1
+  kf_noise_variance:                0.005
+  kf_lambda_2:                      1000.0
+  kf_gamma:                         0.1
+  ema_alpha:                        0.005
+
+# Parameter                         joint_acceleration_filter
+# Description                       List containing joint acceleration
+#                                   filter parameters.
+# Usage                             Firmware
+# Type                              Map
+# Unit                              -
+# Range                             -
+# Default                           []
+joint_acceleration_filter:
+  type:                             1
+  kf_noise_variance:                20.0
+  kf_lambda_2:                      1000.0
+  kf_gamma:                         0.1
+  ema_alpha:                        0.01
