@@ -1,7 +1,7 @@
 #include "ethercat_device_configurator/EthercatDeviceConfigurator.hpp"
 
 /*Anydrives*/
-#include "anydrive/AnydriveEthercatSlave.hpp"
+#include "anydrive/Anydrive.hpp"
 #include "anydrive/configuration/AnydriveConfigurationParser.hpp"
 
 /*Elmo*/
