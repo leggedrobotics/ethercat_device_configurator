@@ -275,7 +275,7 @@ void EthercatDeviceConfigurator::setup(bool startup)
             std::string configuration_file_path = handleFilePath(entry.config_file_path,m_setup_file_path);
 
             //Create instance of rokubi sensor
-            std::shared_ptr<rokubi::Rokubi> rokubi_slave = std::make_shared<rokubi::Rokubi>();
+            std::shared_ptr<rokubi::Rokubi> rokubi_slave = std::make_shared<rokubi::Rokubi>(entry.name, entry.ethercat_address);
 
             //Parse configuration
             rokubi::ConfigurationParser rokubi_parser(configuration_file_path);
