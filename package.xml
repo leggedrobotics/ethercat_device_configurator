@@ -15,5 +15,6 @@
 
   <depend>anydrive</depend>
   <depend>elmo_ethercat_sdk</depend>
+  <depend>rokubi_rsl_ethercat_sdk</depend>
 
 </package>

@@ -8,6 +8,10 @@
 #include "elmo_ethercat_sdk/Elmo.hpp"
 #include "elmo_ethercat_sdk/ConfigurationParser.hpp"
 
+/*Bota rokubi and SenseOne sensors*/
+#include "rokubi_rsl_ethercat_sdk/Rokubi.hpp"
+#include "rokubi_rsl_ethercat_sdk/ConfigurationParser.hpp"
+
 /*yaml-cpp*/
 #include "yaml-cpp/yaml.h"
 
@@ -262,7 +266,22 @@ void EthercatDeviceConfigurator::setup(bool startup)
             break;
 
         case EthercatSlaveType::Rokubi:
-            //TODO
+        {
+            //Handle configuration file path
+            std::string configuration_file_path = handleFilePath(entry.config_file_path,m_setup_file_path);
+
+            //Create instance of rokubi sensor
+            std::shared_ptr<rokubi::Rokubi> rokubi_slave = std::make_shared<rokubi::Rokubi>();
+
+            //Parse configuration
+            rokubi::ConfigurationParser rokubi_parser(configuration_file_path);
+
+            //Load configuration
+            const auto configuration = rokubi_parser.getConfiguration();
+            rokubi_slave->loadConfiguration(configuration);
+
+            slave = rokubi_slave;
+        }
             break;
 
         default:

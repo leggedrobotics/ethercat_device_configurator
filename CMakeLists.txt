@@ -17,6 +17,7 @@ find_package(yaml-cpp REQUIRED)
 set(PACKAGE_DEPENDENCIES
   anydrive
   elmo_ethercat_sdk
+  rokubi_rsl_ethercat_sdk
 )
 
 find_package(catkin REQUIRED
