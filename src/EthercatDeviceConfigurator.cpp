@@ -240,7 +240,7 @@ void EthercatDeviceConfigurator::setup(bool startup)
                 throw std::runtime_error("PDO unknown: " + entry.ethercat_pdo_type);
             }
 
-            std::shared_ptr<anydrive::AnydriveEthercatSlave> anydrive_slave = std::make_shared<anydrive::AnydriveEthercatSlave>(entry.ethercat_address,pdo);
+            std::shared_ptr<anydrive::AnydriveEthercatSlave> anydrive_slave = std::make_shared<anydrive::AnydriveEthercatSlave>(entry.ethercat_address,entry.name,pdo);
 
             //Parse configuration
             //handleFilePath takes care of creating an absolute path from the path in the setup.yaml
