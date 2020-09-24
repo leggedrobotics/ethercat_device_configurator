@@ -24,8 +24,7 @@ EthercatDeviceConfigurator::EthercatDeviceConfigurator(std::string path, bool st
 {
     parseFile(m_setup_file_path);
     setup(startup);
-
-
+    MELO_DEBUG("[EthercatDeviceConfigurator] Parsing and setup finished");
 }
 
 std::vector<std::shared_ptr<ecat_master::EthercatMaster> > EthercatDeviceConfigurator::getMasters()
@@ -45,7 +44,7 @@ std::shared_ptr<ecat_master::EthercatDrive> EthercatDeviceConfigurator::getSlave
         if(slave->getName() == name)
             return slave;
     }
-    throw std::runtime_error("Slave: "+name + " not found");
+    throw std::runtime_error("[EthercatDeviceConfigurator] Slave: "+name + " not found");
 }
 
 const EthercatDeviceConfigurator::EthercatSlaveEntry &EthercatDeviceConfigurator::getInfoForSlave(const std::shared_ptr<ecat_master::EthercatDrive> &slave)
@@ -56,10 +55,10 @@ const EthercatDeviceConfigurator::EthercatSlaveEntry &EthercatDeviceConfigurator
 std::shared_ptr<ecat_master::EthercatMaster> EthercatDeviceConfigurator::master()
 {
     if(m_masters.size() > 1)
-        throw std::runtime_error("More than one master configured, use getMasters instead of master");
+        throw std::runtime_error("[EthercatDeviceConfigurator] More than one master configured, use getMasters instead of master");
 
     if(m_masters.empty())
-        throw std::out_of_range("No master configured");
+        throw std::out_of_range("[EthercatDeviceConfigurator] No master configured");
 
     return m_masters[0];
 }
@@ -73,7 +72,7 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
 {
     //Check if file exists
     if(!std::filesystem::exists(path))
-        throw std::runtime_error("File not found: "+path);
+        throw std::runtime_error("[EthercatDeviceConfigurator] File not found: "+path);
     //Load into yaml
     YAML::Node node = YAML::LoadFile(path);
 
@@ -88,7 +87,7 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
         }
         else
         {
-            throw std::runtime_error("Node time_step missing in ethercat_master");
+            throw std::runtime_error("[EthercatDeviceConfigurator] Node time_step missing in ethercat_master");
         }
 
         if(ecat_master_node["state_change_timeout"])
@@ -97,12 +96,12 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
         }
         else
         {
-            throw std::runtime_error("Node state_change_timeout missing in ethercat_master");
+            throw std::runtime_error("[EthercatDeviceConfigurator] Node state_change_timeout missing in ethercat_master");
         }
     }
     else
     {
-        throw std::runtime_error("Node ethercat_master is missing in yaml");
+        throw std::runtime_error("[EthercatDeviceConfigurator] Node ethercat_master is missing in yaml");
     }
 
     //Check if node is ethercat_devices
@@ -111,7 +110,7 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
         //Get all children
         const YAML::Node& nodes = node["ethercat_devices"];
         if(nodes.size() == 0)
-            throw std::runtime_error("No devices defined in yaml");
+            throw std::runtime_error("[EthercatDeviceConfigurator] No devices defined in yaml");
 
         //Iterate through child nodes
         for(YAML::const_iterator it = nodes.begin(); it != nodes.end();++it)
@@ -137,12 +136,12 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
                 }
                 else
                 {
-                    throw std::runtime_error(type_str + " is an undefined type of ethercat device");
+                    throw std::runtime_error("[EthercatDeviceConfigurator] " +type_str + " is an undefined type of ethercat device");
                 }
             }
             else
             {
-                throw std::runtime_error("Node: " + child.Tag() + "has no entry type");
+                throw std::runtime_error("[EthercatDeviceConfigurator] Node: " + child.Tag() + "has no entry type");
             }
 
             //name - entry
@@ -153,7 +152,7 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
             }
             else
             {
-                throw std::runtime_error("Node: " + child.Tag() + "has no entry name");
+                throw std::runtime_error("[EthercatDeviceConfigurator] Node: " + child.Tag() + "has no entry name");
             }
 
             //configuration_file - entry
@@ -163,7 +162,7 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
             }
             else
             {
-                throw std::runtime_error("Node: " + child.Tag() + "has no entry configuration_file");
+                throw std::runtime_error("[EthercatDeviceConfigurator] Node: " + child.Tag() + "has no entry configuration_file");
             }
 
             //ethercat_bus_address - entry
@@ -173,7 +172,7 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
             }
             else
             {
-                throw std::runtime_error("Node: " + child.Tag() + "has no entry ethercat_bus_address");
+                throw std::runtime_error("[EthercatDeviceConfigurator] Node: " + child.Tag() + "has no entry ethercat_bus_address");
             }
 
             //ethercat_bus - entry
@@ -183,7 +182,7 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
             }
             else
             {
-                throw std::runtime_error("Node: " + child.Tag() + "has no entry ethercat_bus");
+                throw std::runtime_error("[EthercatDeviceConfigurator] Node: " + child.Tag() + "has no entry ethercat_bus");
             }
 
             //ethercat_pdo_type - entry
@@ -193,7 +192,7 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
             }
             else
             {
-                throw std::runtime_error("Node: " + child.Tag() + "has no entry ethercat_pdo_type");
+                throw std::runtime_error("[EthercatDeviceConfigurator] Node: " + child.Tag() + "has no entry ethercat_pdo_type");
             }
 
             m_slave_entries.push_back(entry);
@@ -201,7 +200,7 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
     }
     else
     {
-        throw std::runtime_error("Node ethercat_devices missing in yaml");
+        throw std::runtime_error("[EthercatDeviceConfigurator] Node ethercat_devices missing in yaml");
     }
 
 }
@@ -210,7 +209,7 @@ void EthercatDeviceConfigurator::setup(bool startup)
 {
     for(auto & entry: m_slave_entries)
     {
-        MELO_DEBUG_STREAM("Creating slave: " << entry.name);
+        MELO_DEBUG_STREAM("[EthercatDeviceConfigurator] Creating slave: " << entry.name);
 
         std::shared_ptr<ecat_master::EthercatDrive> slave = nullptr;
 
@@ -251,7 +250,7 @@ void EthercatDeviceConfigurator::setup(bool startup)
             }
             else
             {
-                throw std::runtime_error("PDO unknown: " + entry.ethercat_pdo_type);
+                throw std::runtime_error("[EthercatDeviceConfigurator] PDO unknown: " + entry.ethercat_pdo_type);
             }
 
             std::shared_ptr<anydrive::AnydriveEthercatSlave> anydrive_slave = std::make_shared<anydrive::AnydriveEthercatSlave>(entry.ethercat_address,entry.name,pdo);
@@ -290,7 +289,7 @@ void EthercatDeviceConfigurator::setup(bool startup)
             break;
 
         default:
-            throw std::runtime_error("Not existing EthercatSlaveType passed");
+            throw std::runtime_error("[EthercatDeviceConfigurator] Not existing EthercatSlaveType passed");
             break;
 
 
@@ -315,8 +314,10 @@ void EthercatDeviceConfigurator::setup(bool startup)
             {
                 master_found = true;
                 //Yes we attach the slave
-                master->attachDrive(slave);
-
+                if(!master->attachDrive(slave))
+                {
+                    throw std::runtime_error("[EthercatDeviceConfigurator] could not attach slave: " + slave->getName() + " to master on interface: " + master->getConfiguration().networkInterface);
+                }
                 break;
             }
         }
@@ -332,7 +333,10 @@ void EthercatDeviceConfigurator::setup(bool startup)
             m_masters.push_back(master);
 
             //And attach the slave
-            master->attachDrive(slave);
+            if(!master->attachDrive(slave))
+            {
+                throw std::runtime_error("[EthercatDeviceConfigurator] could not attach slave: " + slave->getName() + " to master on interface: " + master->getConfiguration().networkInterface);
+            }
         }
 
     }
@@ -341,7 +345,11 @@ void EthercatDeviceConfigurator::setup(bool startup)
     {
         for(auto & master: m_masters)
         {
-            master->startup();
+            MELO_DEBUG("Starting master on: " + master->getConfiguration().networkInterface)
+            if(!master->startup())
+            {
+                throw std::runtime_error("[EthercatDeviceConfigurator] could not start master on interface: " + master->getConfiguration().networkInterface);
+            }
         }
     }
 
@@ -362,7 +370,7 @@ std::string EthercatDeviceConfigurator::handleFilePath(const std::string &path, 
         // Path to the configuration file is absolute, we need to replace '~' with the home directory.
         const char* homeDirectory = getenv("HOME");
         if (homeDirectory == nullptr)
-            throw std::runtime_error("Environment variable 'HOME' could not be evaluated.");
+            throw std::runtime_error("[EthercatDeviceConfigurator] Environment variable 'HOME' could not be evaluated.");
         result_path = path;
         result_path.erase(result_path.begin());
         result_path = homeDirectory + result_path;
