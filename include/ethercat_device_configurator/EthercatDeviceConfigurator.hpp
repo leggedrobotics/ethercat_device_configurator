@@ -92,21 +92,40 @@ public:
     }
 
 private:
+    //Stores the general master configuration.
+    //If slaves on multiple bus interfaces are detected, the bus interface in this object will be the interface of the last configured interface
     ecat_master::EthercatMasterConfiguration m_master_configuration;
-
+    //Vector of all configured masters
     std::vector<std::shared_ptr<ecat_master::EthercatMaster>> m_masters;
-
+    //Vecotr of all configured slaves (For all masters)
     std::vector<std::shared_ptr<ecat_master::EthercatDrive>> m_slaves;
 
-
+    //List of all parsed slave entries from the setup.yaml
     std::vector<EthercatSlaveEntry> m_slave_entries;
+    //Map that helps finding the right slave entry for a certain slave
     std::map<std::shared_ptr<ecat_master::EthercatDrive>, EthercatSlaveEntry> m_slave_to_entry_map;
 
 
+    /*Internal methods*/
 
+    /**
+     * @brief parseFile - parses a setup.yaml. This methods adds the found entries in the m_slave_entries list and sets the m_master_configuration (without the bus interface)
+     * @param path
+     */
     void parseFile(std::string path);
+    /**
+     * @brief setup - uses the m_slave_entries to create slaves and bus masters. Attaches the slaves to the bus master. Can startup the bus
+     * @param startup - true: call startup for all busses
+     */
     void setup(bool startup);
+    /**
+     * @brief handleFilePath - helps with parsing file paths in the setup.yaml
+     * @param path
+     * @param setup_file_path
+     * @return
+     */
     std::string handleFilePath(const std::string& path, const std::string &setup_file_path) const;
 
+    //Path to the setup file
     std::string m_setup_file_path ="";
 };
