@@ -1,6 +1,13 @@
 cmake_minimum_required(VERSION 3.0)
 project(ethercat_device_configurator)
 
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+    message(STATUS "Using ccache")
+  set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+  set(CMAKE_C_COMPILER_LAUNCHER   ${CCACHE_PROGRAM})
+endif()
+
 set(CMAKE_CXX_STANDARD 17)
 add_definitions(-Wall -Werror)
 
@@ -36,7 +43,7 @@ include_directories(
 file(GLOB_RECURSE SRC_FILES ./src/*.c*)
 
 #set(SRC_FILES
-#    src/anydrive/AnydriveEthercatSlave.cpp)
+#    src/anydrive/Anydrive.cpp)
 
 add_library(${PROJECT_NAME}
   ${SRC_FILES}

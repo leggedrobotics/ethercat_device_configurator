@@ -44,6 +44,11 @@ std::shared_ptr<ecat_master::EthercatDrive> EthercatDeviceConfigurator::getSlave
     throw std::runtime_error("Slave: "+name + " not found");
 }
 
+const EthercatDeviceConfigurator::EthercatSlaveEntry &EthercatDeviceConfigurator::getInfoForSlave(const std::shared_ptr<ecat_master::EthercatDrive> &slave)
+{
+    return m_slave_to_entry_map[slave];
+}
+
 std::shared_ptr<ecat_master::EthercatMaster> EthercatDeviceConfigurator::master()
 {
     if(m_masters.size() > 1)
@@ -267,6 +272,7 @@ void EthercatDeviceConfigurator::setup(bool startup)
 
         }
         m_slaves.push_back(slave);
+        m_slave_to_entry_map.insert({slave, entry});
     }
 
 
@@ -275,14 +281,7 @@ void EthercatDeviceConfigurator::setup(bool startup)
     for(auto & slave: m_slaves)
     {
         //Find entry object for each slave because the slave base class does not provide info about the interface name
-        EthercatSlaveEntry entry;
-        for(auto & slave_entry: m_slave_entries)
-        {
-            if(slave->getAddress() == slave_entry.ethercat_address)
-            {
-                entry = slave_entry;
-            }
-        }
+        EthercatSlaveEntry entry = m_slave_to_entry_map[slave];
 
         //See if we already have a master for that interface
         bool master_found = false;

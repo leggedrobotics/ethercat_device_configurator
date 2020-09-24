@@ -51,7 +51,7 @@ public:
      * @return
      */
     std::shared_ptr<ecat_master::EthercatDrive> getSlave(std::string name);
-
+    const EthercatSlaveEntry& getInfoForSlave(const std::shared_ptr<ecat_master::EthercatDrive>& slave);
     std::shared_ptr<ecat_master::EthercatMaster> master();
 
 private:
@@ -60,7 +60,10 @@ private:
     std::vector<std::shared_ptr<ecat_master::EthercatMaster>> m_masters;
 
     std::vector<std::shared_ptr<ecat_master::EthercatDrive>> m_slaves;
+
+
     std::vector<EthercatSlaveEntry> m_slave_entries;
+    std::map<std::shared_ptr<ecat_master::EthercatDrive>, EthercatSlaveEntry> m_slave_to_entry_map;
 
 
 
