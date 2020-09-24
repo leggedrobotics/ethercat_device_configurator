@@ -3,6 +3,7 @@
 #include <thread>
 
 #include "anydrive/Anydrive.hpp"
+#include "rokubi_rsl_ethercat_sdk/Rokubi.hpp"
 #include <csignal>
 std::unique_ptr<std::thread> worker_thread;
 bool abrt = false;
@@ -34,6 +35,12 @@ void worker()
                     any_slave_ptr->setCommand(cmd);
                 }
 
+            }
+            if(configurator->getInfoForSlave(slave).type == EthercatDeviceConfigurator::EthercatSlaveType::Rokubi)
+            {
+                std::shared_ptr<rokubi::Rokubi> rokubi_slave_ptr = std::dynamic_pointer_cast<rokubi::Rokubi>(slave);
+
+                //std::cout << rokubi_slave_ptr->getReading().getForceX() << std::endl;
             }
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
