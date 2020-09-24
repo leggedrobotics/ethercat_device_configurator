@@ -10,6 +10,7 @@ endif()
 
 set(CMAKE_CXX_STANDARD 17)
 add_definitions(-Wall -Werror)
+add_definitions(-DMELO_USE_COUT)
 
 
 find_package(yaml-cpp REQUIRED)
@@ -58,6 +59,7 @@ target_link_libraries(
   ${PROJECT_NAME}
   ${catkin_LIBRARIES}
   ${YAML_CPP_LIBRARIES}
+  stdc++fs
 )
 
 
@@ -78,6 +80,7 @@ target_link_libraries(
   ${YAML_CPP_LIBRARIES}
   #Eigen3:Eigen
   -pthread
+  stdc++fs
 )
 
 install(TARGETS ${PROJECT_NAME} standalone
