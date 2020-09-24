@@ -3,7 +3,7 @@
 #include <memory>
 #include <string>
 #include <ethercat_sdk_master/EthercatMaster.hpp>
-
+#include <type_traits>
 
 class EthercatDeviceConfigurator
 {
@@ -48,11 +48,48 @@ public:
     /**
      * @brief getSlave - get a certain slave by its name
      * @param name
-     * @return
+     * @return shared_ptr on slave
      */
     std::shared_ptr<ecat_master::EthercatDrive> getSlave(std::string name);
+    /**
+     * @brief getInfoForSlave
+     * @param slave - shared ptr on slave
+     * @return Info entry parsed from setup.yaml
+     */
     const EthercatSlaveEntry& getInfoForSlave(const std::shared_ptr<ecat_master::EthercatDrive>& slave);
+    /**
+     * @brief master
+     * @return pointer on master if only a single master is available
+     * @throw std::runtime_error if more than one master is configured
+     */
     std::shared_ptr<ecat_master::EthercatMaster> master();
+
+    /**
+     * @brief getSetupFilePath
+     * @return path to setup file
+     */
+    const std::string& getSetupFilePath();
+
+    /**
+     * @brief getSlavesOfType - return all slaves of type T (vector of shared_ptr).
+     * @note Warning cache the result if you need them on a regular base. Might have bad performance
+     */
+    template<typename T, std::enable_if_t<std::is_base_of_v<ecat_master::EthercatDrive, T>>>
+    std::vector<std::shared_ptr<T>> getSlavesOfType()
+    {
+
+        std::vector<std::shared_ptr<T>> slaves;
+
+        for(auto & slave: m_slaves)
+        {
+            auto ptr = std::dynamic_pointer_cast<T>(slave);
+            if(ptr)
+            {
+                slaves.push_back(ptr);
+            }
+        }
+        return slaves;
+    }
 
 private:
     ecat_master::EthercatMasterConfiguration m_master_configuration;

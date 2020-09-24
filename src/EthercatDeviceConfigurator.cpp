@@ -64,6 +64,11 @@ std::shared_ptr<ecat_master::EthercatMaster> EthercatDeviceConfigurator::master(
     return m_masters[0];
 }
 
+const std::string &EthercatDeviceConfigurator::getSetupFilePath()
+{
+    return m_setup_file_path;
+}
+
 void EthercatDeviceConfigurator::parseFile(std::string path)
 {
     //Check if file exists
