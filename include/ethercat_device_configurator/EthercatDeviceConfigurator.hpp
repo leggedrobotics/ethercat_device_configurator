@@ -44,19 +44,19 @@ public:
      * @brief getSlaves
      * @return a vector of all slaves
      */
-    std::vector<std::shared_ptr<ecat_master::EthercatDrive>> getSlaves();
+    std::vector<std::shared_ptr<ecat_master::EthercatDevice>> getSlaves();
     /**
      * @brief getSlave - get a certain slave by its name
      * @param name
      * @return shared_ptr on slave
      */
-    std::shared_ptr<ecat_master::EthercatDrive> getSlave(std::string name);
+    std::shared_ptr<ecat_master::EthercatDevice> getSlave(std::string name);
     /**
      * @brief getInfoForSlave
      * @param slave - shared ptr on slave
      * @return Info entry parsed from setup.yaml
      */
-    const EthercatSlaveEntry& getInfoForSlave(const std::shared_ptr<ecat_master::EthercatDrive>& slave);
+    const EthercatSlaveEntry& getInfoForSlave(const std::shared_ptr<ecat_master::EthercatDevice>& slave);
     /**
      * @brief master
      * @return pointer on master if only a single master is available
@@ -74,7 +74,7 @@ public:
      * @brief getSlavesOfType - return all slaves of type T (vector of shared_ptr).
      * @note Warning cache the result if you need them on a regular base. Might have bad performance
      */
-    template<typename T, std::enable_if_t<std::is_base_of_v<ecat_master::EthercatDrive, T>>>
+    template<typename T, std::enable_if_t<std::is_base_of_v<ecat_master::EthercatDevice, T>>>
     std::vector<std::shared_ptr<T>> getSlavesOfType()
     {
 
@@ -98,12 +98,12 @@ private:
     //Vector of all configured masters
     std::vector<std::shared_ptr<ecat_master::EthercatMaster>> m_masters;
     //Vecotr of all configured slaves (For all masters)
-    std::vector<std::shared_ptr<ecat_master::EthercatDrive>> m_slaves;
+    std::vector<std::shared_ptr<ecat_master::EthercatDevice>> m_slaves;
 
     //List of all parsed slave entries from the setup.yaml
     std::vector<EthercatSlaveEntry> m_slave_entries;
     //Map that helps finding the right slave entry for a certain slave
-    std::map<std::shared_ptr<ecat_master::EthercatDrive>, EthercatSlaveEntry> m_slave_to_entry_map;
+    std::map<std::shared_ptr<ecat_master::EthercatDevice>, EthercatSlaveEntry> m_slave_to_entry_map;
 
 
     /*Internal methods*/

@@ -32,12 +32,12 @@ std::vector<std::shared_ptr<ecat_master::EthercatMaster> > EthercatDeviceConfigu
     return m_masters;
 }
 
-std::vector<std::shared_ptr<ecat_master::EthercatDrive> > EthercatDeviceConfigurator::getSlaves()
+std::vector<std::shared_ptr<ecat_master::EthercatDevice>> EthercatDeviceConfigurator::getSlaves()
 {
     return m_slaves;
 }
 
-std::shared_ptr<ecat_master::EthercatDrive> EthercatDeviceConfigurator::getSlave(std::string name)
+std::shared_ptr<ecat_master::EthercatDevice> EthercatDeviceConfigurator::getSlave(std::string name)
 {
     for(auto & slave: m_slaves)
     {
@@ -47,7 +47,7 @@ std::shared_ptr<ecat_master::EthercatDrive> EthercatDeviceConfigurator::getSlave
     throw std::runtime_error("[EthercatDeviceConfigurator] Slave: "+name + " not found");
 }
 
-const EthercatDeviceConfigurator::EthercatSlaveEntry &EthercatDeviceConfigurator::getInfoForSlave(const std::shared_ptr<ecat_master::EthercatDrive> &slave)
+const EthercatDeviceConfigurator::EthercatSlaveEntry &EthercatDeviceConfigurator::getInfoForSlave(const std::shared_ptr<ecat_master::EthercatDevice> &slave)
 {
     return m_slave_to_entry_map[slave];
 }
@@ -211,7 +211,7 @@ void EthercatDeviceConfigurator::setup(bool startup)
     {
         MELO_DEBUG_STREAM("[EthercatDeviceConfigurator] Creating slave: " << entry.name);
 
-        std::shared_ptr<ecat_master::EthercatDrive> slave = nullptr;
+        std::shared_ptr<ecat_master::EthercatDevice> slave = nullptr;
 
         switch (entry.type) {
         case EthercatSlaveType::Elmo:
@@ -314,7 +314,7 @@ void EthercatDeviceConfigurator::setup(bool startup)
             {
                 master_found = true;
                 //Yes we attach the slave
-                if(!master->attachDrive(slave))
+                if(!master->attachDevice(slave))
                 {
                     throw std::runtime_error("[EthercatDeviceConfigurator] could not attach slave: " + slave->getName() + " to master on interface: " + master->getConfiguration().networkInterface);
                 }
@@ -333,7 +333,7 @@ void EthercatDeviceConfigurator::setup(bool startup)
             m_masters.push_back(master);
 
             //And attach the slave
-            if(!master->attachDrive(slave))
+            if(!master->attachDevice(slave))
             {
                 throw std::runtime_error("[EthercatDeviceConfigurator] could not attach slave: " + slave->getName() + " to master on interface: " + master->getConfiguration().networkInterface);
             }
