@@ -10,13 +10,14 @@ bool abrt = false;
 
 EthercatDeviceConfigurator::SharedPtr configurator;
 
+unsigned int counter = 0;
 void worker()
 {
     while(!abrt)
     {
         for(const auto & master: configurator->getMasters() )
         {
-            master->update();
+            master->update(ecat_master::UpdateMode::StandaloneEnforceRate);
         }
 
         for(const auto & slave:configurator->getSlaves())
@@ -40,10 +41,11 @@ void worker()
             {
                 std::shared_ptr<rokubi::Rokubi> rokubi_slave_ptr = std::dynamic_pointer_cast<rokubi::Rokubi>(slave);
 
-                //std::cout << rokubi_slave_ptr->getReading().getForceX() << std::endl;
+                if(counter%100 == 0)
+                    std::cout << rokubi_slave_ptr->getReading().getForceX() << std::endl;
             }
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        counter++;
     }
 }
 
