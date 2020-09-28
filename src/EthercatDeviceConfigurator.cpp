@@ -77,11 +77,11 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
     YAML::Node node = YAML::LoadFile(path);
 
     //Ethercat master configuration
-    if(node["ethercat_master"].IsDefined())
+    if(node["ethercat_master"])
     {
         const auto ecat_master_node = node["ethercat_master"];
 
-        if(ecat_master_node["time_step"].IsDefined())
+        if(ecat_master_node["time_step"])
         {
             m_master_configuration.timeStep = ecat_master_node["time_step"].as<double>();
         }
@@ -104,7 +104,7 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
     }
 
     //Check if node is ethercat_devices
-    if(node["ethercat_devices"].IsDefined())
+    if(node["ethercat_devices"])
     {
         //Get all children
         const YAML::Node& nodes = node["ethercat_devices"];
@@ -117,7 +117,7 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
             const YAML::Node& child = *it;
             EthercatSlaveEntry entry;
             //type - entry
-            if(child["type"].IsDefined())
+            if(child["type"])
             {
                 auto type_str = child["type"].as<std::string>();
 
@@ -144,7 +144,7 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
             }
 
             //name - entry
-            if(child["name"].IsDefined())
+            if(child["name"])
             {
 
                 entry.name = child["name"].as<std::string>();
@@ -155,7 +155,7 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
             }
 
             //configuration_file - entry
-            if(child["configuration_file"].IsDefined())
+            if(child["configuration_file"])
             {
                 entry.config_file_path = child["configuration_file"].as<std::string>();
             }
@@ -165,7 +165,7 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
             }
 
             //ethercat_bus_address - entry
-            if(child["ethercat_address"].IsDefined())
+            if(child["ethercat_address"])
             {
                 entry.ethercat_address = child["ethercat_address"].as<int>();
             }
@@ -175,7 +175,7 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
             }
 
             //ethercat_bus - entry
-            if(child["ethercat_bus"].IsDefined())
+            if(child["ethercat_bus"])
             {
                 entry.ethercat_bus = child["ethercat_bus"].as<std::string>();
             }
@@ -185,7 +185,7 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
             }
 
             //ethercat_pdo_type - entry
-            if(child["ethercat_pdo_type"].IsDefined())
+            if(child["ethercat_pdo_type"])
             {
                 entry.ethercat_pdo_type = child["ethercat_pdo_type"].as<std::string>();
             }
