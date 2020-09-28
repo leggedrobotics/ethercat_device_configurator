@@ -74,7 +74,7 @@ public:
      * @brief getSlavesOfType - return all slaves of type T (vector of shared_ptr).
      * @note Warning cache the result if you need them on a regular base. Might have bad performance
      */
-    template<typename T, std::enable_if_t<std::is_base_of_v<ecat_master::EthercatDevice, T>>>
+    template<typename T, typename dummy = std::enable_if_t<std::is_base_of_v<ecat_master::EthercatDevice, T>>>
     std::vector<std::shared_ptr<T>> getSlavesOfType()
     {
 
