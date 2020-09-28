@@ -89,14 +89,13 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
         {
             throw std::runtime_error("[EthercatDeviceConfigurator] Node time_step missing in ethercat_master");
         }
-
-        if(ecat_master_node["state_change_timeout"])
+        if(ecat_master_node["update_rate_too_low_warn_threshold"])
         {
-            m_master_configuration.ethercatStateChangeTimeout = ecat_master_node["state_change_timeout"].as<double>();
+            m_master_configuration.updateRateTooLowWarnThreshold = ecat_master_node["update_rate_too_low_warn_threshold"].as<int>();
         }
         else
         {
-            throw std::runtime_error("[EthercatDeviceConfigurator] Node state_change_timeout missing in ethercat_master");
+            throw std::runtime_error("[EthercatDeviceConfigurator] Node update_rate_too_low_warn_threshold missing in ethercat_master");
         }
     }
     else
