@@ -6,7 +6,6 @@
 
 /*Elmo*/
 #include "elmo_ethercat_sdk/Elmo.hpp"
-#include "elmo_ethercat_sdk/ConfigurationParser.hpp"
 
 /*Bota rokubi and SenseOne sensors*/
 #include "rokubi_rsl_ethercat_sdk/Rokubi.hpp"
@@ -215,15 +214,11 @@ void EthercatDeviceConfigurator::setup(bool startup)
         switch (entry.type) {
         case EthercatSlaveType::Elmo:
         {
-            std::shared_ptr<elmo::Elmo> elmo_slave = std::make_shared<elmo::Elmo>();
+            std::shared_ptr<elmo::Elmo> elmo_slave = std::make_shared<elmo::Elmo>(entry.name, entry.ethercat_address);
             //Parse configuration
             //handleFilePath takes care of creating an absolute path from the path in the setup.yaml
             std::string configuration_file_path = handleFilePath(entry.config_file_path,m_setup_file_path);
-
-
-            elmo::ConfigurationParser parser(configuration_file_path);
-            const auto configuration = parser.getConfiguration();
-            elmo_slave->loadConfiguration(configuration);
+            elmo_slave->loadConfigFile(configuration_file_path);
             slave = elmo_slave;
         }
             break;

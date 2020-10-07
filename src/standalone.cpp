@@ -36,6 +36,15 @@ unsigned int counter = 0;
 
 void worker()
 {
+    bool rtSuccess = true;
+    for(const auto & master: configurator->getMasters())
+    {
+        rtSuccess &= master->setRealtimePriority(99);
+    }
+    std::cout << "Setting RT Priority: " << (rtSuccess? "successful." : "not successful. Check user privileges.") << std::endl;
+
+    // Flag to set the drive state for the elmos on first startup
+    bool elmoEnabledAfterStartup = false;
     /*
     ** The communication update loop.
     ** This loop is supposed to be executed at a constant rate.
@@ -52,7 +61,7 @@ void worker()
          */
         for(const auto & master: configurator->getMasters() )
         {
-            master->update(ecat_master::UpdateMode::StandaloneEnforceRate);
+            master->update(ecat_master::UpdateMode::StandaloneEnforceRate); // TODO fix the rate compensation (Elmo reliability problem)!!
         }
 
         /*
@@ -62,6 +71,7 @@ void worker()
          */
         for(const auto & slave:configurator->getSlaves())
         {
+            // Anydrive
             if(configurator->getInfoForSlave(slave).type == EthercatDeviceConfigurator::EthercatSlaveType::Anydrive)
             {
 
@@ -77,18 +87,39 @@ void worker()
                 }
 
             }
+            // Rokubi
             else if(configurator->getInfoForSlave(slave).type == EthercatDeviceConfigurator::EthercatSlaveType::Rokubi)
             {
                 std::shared_ptr<rokubi::Rokubi> rokubi_slave_ptr = std::dynamic_pointer_cast<rokubi::Rokubi>(slave);
                 // Do things with the Rokubi sensors here
             }
+
+            // Elmo
             else if(configurator->getInfoForSlave(slave).type == EthercatDeviceConfigurator::EthercatSlaveType::Elmo)
             {
                 std::shared_ptr<elmo::Elmo> elmo_slave_ptr = std::dynamic_pointer_cast<elmo::Elmo>(slave);
-                // Do things with the Elmo drives here
+                if(!elmoEnabledAfterStartup)
+                    // Set elmos to operation enabled state, do not block the call!
+                    elmo_slave_ptr->setDriveStateViaPdo(elmo::DriveState::OperationEnabled, false);
+                // set commands if we can
+                if(elmo_slave_ptr->lastPdoStateChangeSuccessful() && elmo_slave_ptr->getReading().getDriveState() == elmo::DriveState::OperationEnabled)
+                {
+                    elmo::Command command;
+                    command.setTargetVelocity(50);
+                    elmo_slave_ptr->stageCommand(command);
+                }
+                else
+                {
+                    MELO_WARN_STREAM("Elmo '" << elmo_slave_ptr->getName() << "': " << elmo_slave_ptr->getReading().getDriveState());
+                    //elmo_slave_ptr->setDriveStateViaPdo(elmo::DriveState::OperationEnabled, false);
+                }
+                auto reading = elmo_slave_ptr->getReading();
+                // std::cout << "Elmo '" << elmo_slave_ptr->getName() << "': "
+                //         << "velocity: " << reading.getActualVelocity() << " rad/s\n";
             }
         }
         counter++;
+        elmoEnabledAfterStartup = true;
     }
 }
 
@@ -135,13 +166,13 @@ void signal_handler(int sig)
 // Some dummy callbacks
 void anydriveReadingCb(const std::string& name, const anydrive::ReadingExtended& reading)
 {
-    std::cout << "Reading of anydrive '" << name << "'\n"
-              << "Joint velocity: " << reading.getState().getJointVelocity() << "\n\n";
+    // std::cout << "Reading of anydrive '" << name << "'\n"
+    //           << "Joint velocity: " << reading.getState().getJointVelocity() << "\n\n";
 }
 void rokubiReadingCb(const std::string& name, const rokubi::Reading& reading)
 {
-    std::cout << "Reading of rokubi '" << name << "'\n"
-              << "Force X: " << reading.getForceX() << "\n\n";
+    // std::cout << "Reading of rokubi '" << name << "'\n"
+    //           << "Force X: " << reading.getForceX() << "\n\n";
 }
 
 
@@ -215,8 +246,7 @@ int main(int argc, char**argv)
 
 
     std::cout << "Startup finished" << std::endl;
-    while(true)
-    {
-        // Wait for termination
-    }
+
+    // nothing further to do in this thread.
+    pause();
 }

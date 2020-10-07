@@ -3,25 +3,23 @@ ethercat_master:
     update_rate_too_low_warn_threshold: 50
     
 ethercat_devices:
-   - type:                     Anydrive
-     name:                     Dynadrive
-     configuration_file:       device_configurations/anydrive.yaml
-     ethercat_bus:             enx3c8cf8fb1b90
-     ethercat_address:         1
-     ethercat_pdo_type:        C
+   - type:                              Anydrive
+     name:                              Dynadrive
+     configuration_file:                device_configurations/anydrive.yaml
+     ethercat_bus:                      enx00249b4f53e3
+     ethercat_address:                  2
+     ethercat_pdo_type:                 C
      
-   - type:                     Anydrive
-     name:                     Dynadrive2
-     configuration_file:       device_configurations/anydrive.yaml
-     ethercat_bus:             enx3c8cf8fb1b90
-     ethercat_address:         2
-     ethercat_pdo_type:        C
-     
-   - type:                     Rokubi
-     name:                     Rokubi
-     configuration_file:       device_configurations/rokubi.yaml
-     ethercat_bus:             enx3c8cf8fb1b90
-     ethercat_address:         3
-     ethercat_pdo_type:        A
+   - type:                              Rokubi
+     name:                              Rokubi
+     configuration_file:                device_configurations/rokubi.yaml
+     ethercat_bus:                      enx00249b4f53e3
+     ethercat_address:                  3
+     ethercat_pdo_type:                 A
 
-
+   - type:                              Elmo
+     name:                              ElmoTwitter
+     configuration_file:                device_configurations/elmo.yaml
+     ethercat_bus:                      enx00249b4f53e3
+     ethercat_address:                  1
+     ethercat_pdo_type:                 Standard #TODO: implement something here, is ignored at the moment
