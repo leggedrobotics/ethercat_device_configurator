@@ -214,12 +214,8 @@ void EthercatDeviceConfigurator::setup(bool startup)
         switch (entry.type) {
         case EthercatSlaveType::Elmo:
         {
-            std::shared_ptr<elmo::Elmo> elmo_slave = std::make_shared<elmo::Elmo>(entry.name, entry.ethercat_address);
-            //Parse configuration
-            //handleFilePath takes care of creating an absolute path from the path in the setup.yaml
             std::string configuration_file_path = handleFilePath(entry.config_file_path,m_setup_file_path);
-            elmo_slave->loadConfigFile(configuration_file_path);
-            slave = elmo_slave;
+            slave = elmo::Elmo::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address);
         }
             break;
         case EthercatSlaveType::Anydrive:
@@ -247,19 +243,9 @@ void EthercatDeviceConfigurator::setup(bool startup)
                 throw std::runtime_error("[EthercatDeviceConfigurator] PDO unknown: " + entry.ethercat_pdo_type);
             }
 
-            std::shared_ptr<anydrive::AnydriveEthercatSlave> anydrive_slave = std::make_shared<anydrive::AnydriveEthercatSlave>(entry.ethercat_address,entry.name,pdo);
-
-            //Parse configuration
             //handleFilePath takes care of creating an absolute path from the path in the setup.yaml
             std::string configuration_file_path = handleFilePath(entry.config_file_path,m_setup_file_path);
-
-
-            const auto configuration = anydrive::AnydriveConfigurationParser::fromFile(configuration_file_path);
-
-            //Apply configuration to anydrive
-            anydrive_slave->applyConfiguration(configuration);
-
-            slave = anydrive_slave;
+            slave = anydrive::AnydriveEthercatSlave::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address, pdo);
         }
             break;
 
@@ -267,18 +253,7 @@ void EthercatDeviceConfigurator::setup(bool startup)
         {
             //Handle configuration file path
             std::string configuration_file_path = handleFilePath(entry.config_file_path,m_setup_file_path);
-
-            //Create instance of rokubi sensor
-            std::shared_ptr<rokubi::Rokubi> rokubi_slave = std::make_shared<rokubi::Rokubi>(entry.name, entry.ethercat_address);
-
-            //Parse configuration
-            rokubi::ConfigurationParser rokubi_parser(configuration_file_path);
-
-            //Load configuration
-            const auto configuration = rokubi_parser.getConfiguration();
-            rokubi_slave->loadConfiguration(configuration);
-
-            slave = rokubi_slave;
+            slave = rokubi::Rokubi::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address);
         }
             break;
 
