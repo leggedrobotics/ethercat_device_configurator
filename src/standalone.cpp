@@ -21,11 +21,16 @@
  */
 #include "ethercat_device_configurator/EthercatDeviceConfigurator.hpp"
 
-#include <thread>
-
+#ifdef _ANYDRIVE_FOUND_
 #include <anydrive/Anydrive.hpp>
-#include <rokubi_rsl_ethercat_sdk/Rokubi.hpp>
+#endif
+#ifdef _ELMO_FOUND_
 #include <elmo_ethercat_sdk/Elmo.hpp>
+#endif
+#ifdef _ROKUBI_FOUND_
+#include <rokubi_rsl_ethercat_sdk/Rokubi.hpp>
+#endif
+#include <thread>
 #include <csignal>
 std::unique_ptr<std::thread> worker_thread;
 bool abrt = false;
@@ -44,7 +49,9 @@ void worker()
     std::cout << "Setting RT Priority: " << (rtSuccess? "successful." : "not successful. Check user privileges.") << std::endl;
 
     // Flag to set the drive state for the elmos on first startup
+#ifdef _ELMO_FOUND_
     bool elmoEnabledAfterStartup = false;
+#endif
     /*
     ** The communication update loop.
     ** This loop is supposed to be executed at a constant rate.
@@ -74,7 +81,7 @@ void worker()
             // Anydrive
             if(configurator->getInfoForSlave(slave).type == EthercatDeviceConfigurator::EthercatSlaveType::Anydrive)
             {
-
+#ifdef _ANYDRIVE_FOUND_
                 anydrive::AnydriveEthercatSlave::SharedPtr any_slave_ptr = std::dynamic_pointer_cast<anydrive::AnydriveEthercatSlave>(slave);
 
                 if(any_slave_ptr->getActiveStateEnum() == anydrive::fsm::StateEnum::ControlOp)
@@ -85,18 +92,22 @@ void worker()
 
                     any_slave_ptr->setCommand(cmd);
                 }
+#endif
 
             }
             // Rokubi
             else if(configurator->getInfoForSlave(slave).type == EthercatDeviceConfigurator::EthercatSlaveType::Rokubi)
             {
+#ifdef _ROKUBI_FOUND_
                 std::shared_ptr<rokubi::Rokubi> rokubi_slave_ptr = std::dynamic_pointer_cast<rokubi::Rokubi>(slave);
                 // Do things with the Rokubi sensors here
+#endif
             }
 
             // Elmo
             else if(configurator->getInfoForSlave(slave).type == EthercatDeviceConfigurator::EthercatSlaveType::Elmo)
             {
+#ifdef _ELMO_FOUND_
                 std::shared_ptr<elmo::Elmo> elmo_slave_ptr = std::dynamic_pointer_cast<elmo::Elmo>(slave);
                 if(!elmoEnabledAfterStartup)
                     // Set elmos to operation enabled state, do not block the call!
@@ -116,10 +127,13 @@ void worker()
                 auto reading = elmo_slave_ptr->getReading();
                 // std::cout << "Elmo '" << elmo_slave_ptr->getName() << "': "
                 //         << "velocity: " << reading.getActualVelocity() << " rad/s\n";
+#endif
             }
         }
         counter++;
+#ifdef _ELMO_FOUND_
         elmoEnabledAfterStartup = true;
+#endif
     }
 }
 
@@ -163,17 +177,21 @@ void signal_handler(int sig)
     exit(0);
 }
 
+#ifdef _ANYDRIVE_FOUND_
 // Some dummy callbacks
 void anydriveReadingCb(const std::string& name, const anydrive::ReadingExtended& reading)
 {
     // std::cout << "Reading of anydrive '" << name << "'\n"
     //           << "Joint velocity: " << reading.getState().getJointVelocity() << "\n\n";
 }
+#endif
+#ifdef _ROKUBI_FOUND_
 void rokubiReadingCb(const std::string& name, const rokubi::Reading& reading)
 {
-    // std::cout << "Reading of rokubi '" << name << "'\n"
-    //           << "Force X: " << reading.getForceX() << "\n\n";
+    std::cout << "Reading of rokubi '" << name << "'\n"
+              << "Force X: " << reading.getForceX() << "\n\n";
 }
+#endif
 
 
 
@@ -200,13 +218,17 @@ int main(int argc, char**argv)
     ** configurator->getSlavesOfType is another way of extracting only the evices
     ** of a ceratin type.
      */
+#ifdef _ANYDRIVE_FOUND_
     for(const auto& device : configurator->getSlavesOfType<anydrive::AnydriveEthercatSlave>())
     {
         device->addReadingCb(anydriveReadingCb);
     }
+#endif
+#if _ROKUBI_FOUND_
     for(const auto& device : configurator->getSlavesOfType<rokubi::Rokubi>()){
         device->addReadingCb(rokubiReadingCb);
     }
+#endif
 
     /*
     ** Start all masters.
@@ -235,6 +257,7 @@ int main(int argc, char**argv)
     for(auto & slave: configurator->getSlaves())
     {
         std::cout << " " << slave->getName() << ": " << slave->getAddress() << std::endl;
+#ifdef _ANYDRIVE_FOUND_
         if(configurator->getInfoForSlave(slave).type == EthercatDeviceConfigurator::EthercatSlaveType::Anydrive)
         {
             // Downcasting using shared pointers
@@ -242,6 +265,7 @@ int main(int argc, char**argv)
             any_slave_ptr->setFSMGoalState(anydrive::fsm::StateEnum::ControlOp, false,0,0);
             std::cout << "Putting slave into operational mode: " << any_slave_ptr->getName() << " : " << any_slave_ptr->getAddress() << std::endl;
         }
+#endif
     }
 
 

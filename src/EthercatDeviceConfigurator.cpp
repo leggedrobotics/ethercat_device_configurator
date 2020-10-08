@@ -1,15 +1,19 @@
 #include "ethercat_device_configurator/EthercatDeviceConfigurator.hpp"
 
 /*Anydrives*/
+#ifdef _ANYDRIVE_FOUND_
 #include "anydrive/Anydrive.hpp"
-#include "anydrive/configuration/AnydriveConfigurationParser.hpp"
+#endif
 
 /*Elmo*/
+#ifdef _ELMO_FOUND_
 #include "elmo_ethercat_sdk/Elmo.hpp"
+#endif
 
 /*Bota rokubi and SenseOne sensors*/
+#ifdef _ROKUBI_FOUND_
 #include "rokubi_rsl_ethercat_sdk/Rokubi.hpp"
-#include "rokubi_rsl_ethercat_sdk/ConfigurationParser.hpp"
+#endif
 
 /*yaml-cpp*/
 #include "yaml-cpp/yaml.h"
@@ -214,12 +218,18 @@ void EthercatDeviceConfigurator::setup(bool startup)
         switch (entry.type) {
         case EthercatSlaveType::Elmo:
         {
+#ifdef _ELMO_FOUND_
             std::string configuration_file_path = handleFilePath(entry.config_file_path,m_setup_file_path);
             slave = elmo::Elmo::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address);
+#else
+            throw std::runtime_error("elmo_ethercat_sdk not availabe.");
+#endif
+
         }
             break;
         case EthercatSlaveType::Anydrive:
         {
+#ifdef _ANYDRIVE_FOUND_
             anydrive::PdoTypeEnum pdo = anydrive::PdoTypeEnum::NA;
 
             if(entry.ethercat_pdo_type == "A")
@@ -246,14 +256,21 @@ void EthercatDeviceConfigurator::setup(bool startup)
             //handleFilePath takes care of creating an absolute path from the path in the setup.yaml
             std::string configuration_file_path = handleFilePath(entry.config_file_path,m_setup_file_path);
             slave = anydrive::AnydriveEthercatSlave::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address, pdo);
+#else
+            throw std::runtime_error("anydrive_ethercat_sdk not available");
+#endif
         }
             break;
 
         case EthercatSlaveType::Rokubi:
         {
+#ifdef _ROKUBI_FOUND_
             //Handle configuration file path
             std::string configuration_file_path = handleFilePath(entry.config_file_path,m_setup_file_path);
             slave = rokubi::Rokubi::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address);
+#else
+            throw std::runtime_error("rokubi_ethercat_sdk not available");
+#endif
         }
             break;
 

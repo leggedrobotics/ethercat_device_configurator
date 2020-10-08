@@ -13,6 +13,10 @@
   <buildtool_depend>catkin</buildtool_depend>
 
 
+  <!-->
+      Optional dependencies.
+      Any single drive sdk or any combination of sdks may be used.
+  <-->
   <depend>anydrive</depend>
   <depend>elmo_ethercat_sdk</depend>
   <depend>rokubi_rsl_ethercat_sdk</depend>

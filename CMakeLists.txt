@@ -15,16 +15,37 @@ add_definitions(-DMELO_USE_COUT)
 
 find_package(yaml-cpp REQUIRED)
 
-set(PACKAGE_DEPENDENCIES
-  anydrive
-  elmo_ethercat_sdk
-  rokubi_rsl_ethercat_sdk
-)
+find_package(catkin REQUIRED)
 
-find_package(catkin REQUIRED
-  COMPONENTS
+find_package(anydrive QUIET)
+find_package(elmo_ethercat_sdk QUIET)
+find_package(rokubi_rsl_ethercat_sdk QUIET)
+
+if(anydrive_FOUND)
+  add_definitions(-D_ANYDRIVE_FOUND_)
+  set(PACKAGE_DEPENDENCIES
     ${PACKAGE_DEPENDENCIES}
-)
+    anydrive
+  )
+endif()
+if(rokubi_rsl_ethercat_sdk_FOUND)
+  add_definitions(-D_ROKUBI_FOUND_)
+  set(PACKAGE_DEPENDENCIES
+    ${PACKAGE_DEPENDENCIES}
+    rokubi_rsl_ethercat_sdk
+  )
+endif()
+if(elmo_ethercat_sdk_FOUND)
+  add_definitions(-D_ELMO_FOUND_)
+  set(PACKAGE_DEPENDENCIES
+    ${PACKAGE_DEPENDENCIES}
+    elmo_ethercat_sdk
+  )
+endif()
+
+foreach(sdk ${PACKAGE_DEPENDENCIES})
+  message("Found EtherCAT device sdk: " ${sdk})
+endforeach()
 
 catkin_package(
   INCLUDE_DIRS
@@ -37,8 +58,9 @@ catkin_package(
 
 include_directories(
   include
-  ${catkin_INCLUDE_DIRS}
-
+  ${anydrive_INCLUDE_DIRS}
+  ${elmo_ethercat_sdk_INCLUDE_DIRS}
+  ${rokubi_rsl_ethercat_sdk_INCLUDE_DIRS}
 )
 
 
@@ -53,11 +75,15 @@ add_library(${PROJECT_NAME}
 )
 add_dependencies(
   ${PROJECT_NAME}
-  ${catkin_EXPORTED_TARGETS}
+  ${anydrive_EXPORTED_TARGETS}
+  ${rokubi_rsl_ethercat_sdk_EXPORTED_TARGETS}
+  ${elmo_ethercat_sdk_EXPORTED_TARGETS}
 )
 target_link_libraries(
   ${PROJECT_NAME}
-  ${catkin_LIBRARIES}
+  ${anydrive_LIBRARIES}
+  ${elmo_ethercat_sdk_LIBRARIES}
+  ${rokubi_rsl_ethercat_sdk_LIBRARIES}
   ${YAML_CPP_LIBRARIES}
   stdc++fs
 )
@@ -71,12 +97,16 @@ add_executable(
 add_dependencies(
   standalone
   ${PROJECT_NAME}
-  ${catkin_EXPORTED_TARGETS}
+  ${anydrive_EXPORTED_TARGETS}
+  ${rokubi_rsl_ethercat_sdk_EXPORTED_TARGETS}
+  ${elmo_ethercat_sdk_EXPORTED_TARGETS}
 )
 target_link_libraries(
   standalone
   ${PROJECT_NAME}
-  ${catkin_LIBRARIES}
+  ${anydrive_LIBRARIES}
+  ${elmo_ethercat_sdk_LIBRARIES}
+  ${rokubi_rsl_ethercat_sdk_LIBRARIES}
   ${YAML_CPP_LIBRARIES}
   #Eigen3:Eigen
   -pthread
