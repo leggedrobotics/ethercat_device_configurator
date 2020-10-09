@@ -188,8 +188,8 @@ void anydriveReadingCb(const std::string& name, const anydrive::ReadingExtended&
 #ifdef _ROKUBI_FOUND_
 void rokubiReadingCb(const std::string& name, const rokubi::Reading& reading)
 {
-    std::cout << "Reading of rokubi '" << name << "'\n"
-              << "Force X: " << reading.getForceX() << "\n\n";
+    // std::cout << "Reading of rokubi '" << name << "'\n"
+    //           << "Force X: " << reading.getForceX() << "\n\n";
 }
 #endif
 

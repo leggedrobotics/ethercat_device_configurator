@@ -15,11 +15,9 @@ ethercat_devices:
      configuration_file:                device_configurations/rokubi.yaml
      ethercat_bus:                      enx00249b4f53e3
      ethercat_address:                  3
-     ethercat_pdo_type:                 A
 
    - type:                              Elmo
      name:                              ElmoTwitter
      configuration_file:                device_configurations/elmo.yaml
      ethercat_bus:                      enx00249b4f53e3
      ethercat_address:                  1
-     ethercat_pdo_type:                 Standard #TODO: implement something here, is ignored at the moment

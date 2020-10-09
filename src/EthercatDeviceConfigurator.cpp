@@ -188,13 +188,16 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
             }
 
             //ethercat_pdo_type - entry
-            if(child["ethercat_pdo_type"])
+            if(entry.type == EthercatSlaveType::Anydrive)
             {
-                entry.ethercat_pdo_type = child["ethercat_pdo_type"].as<std::string>();
-            }
-            else
-            {
-                throw std::runtime_error("[EthercatDeviceConfigurator] Node: " + child.Tag() + "has no entry ethercat_pdo_type");
+                if(child["ethercat_pdo_type"])
+                {
+                    entry.ethercat_pdo_type = child["ethercat_pdo_type"].as<std::string>();
+                }
+                else
+                {
+                    throw std::runtime_error("[EthercatDeviceConfigurator] Node: " + child.Tag() + "has no entry ethercat_pdo_type");
+                }
             }
 
             m_slave_entries.push_back(entry);
