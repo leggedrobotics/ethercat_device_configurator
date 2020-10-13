@@ -17,9 +17,9 @@ find_package(yaml-cpp REQUIRED)
 
 find_package(catkin REQUIRED)
 
-find_package(anydrive QUIET)
-find_package(elmo_ethercat_sdk QUIET)
-find_package(rokubi_rsl_ethercat_sdk QUIET)
+find_package(anydrive )
+find_package(elmo_ethercat_sdk )
+find_package(rokubi_rsl_ethercat_sdk )
 
 if(anydrive_FOUND)
   add_definitions(-D_ANYDRIVE_FOUND_)
@@ -73,12 +73,12 @@ add_library(${PROJECT_NAME}
   ${SRC_FILES}
 
 )
-add_dependencies(
-  ${PROJECT_NAME}
-  ${anydrive_EXPORTED_TARGETS}
-  ${rokubi_rsl_ethercat_sdk_EXPORTED_TARGETS}
-  ${elmo_ethercat_sdk_EXPORTED_TARGETS}
-)
+#add_dependencies(
+#  ${PROJECT_NAME}
+#  ${anydrive_EXPORTED_TARGETS}
+#  ${rokubi_rsl_ethercat_sdk_EXPORTED_TARGETS}
+#  ${elmo_ethercat_sdk_EXPORTED_TARGETS}
+#)
 target_link_libraries(
   ${PROJECT_NAME}
   ${anydrive_LIBRARIES}
