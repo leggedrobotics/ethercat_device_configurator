@@ -369,5 +369,7 @@ std::string EthercatDeviceConfigurator::handleFilePath(const std::string &path, 
         // Path to the configuration file is relative, we need to append it to the path of the setup file.
         result_path = setup_file_path.substr(0, setup_file_path.find_last_of("/")+1) + path;
     }
+    if(!std::filesystem::exists(result_path))
+        throw std::runtime_error("Path: " + result_path + " does not exist");
     return  result_path;
 }
