@@ -19,7 +19,21 @@
 #include "yaml-cpp/yaml.h"
 
 /*std*/
+#if __GNUC__ < 8
+#include <experimental/filesystem>
+#else
 #include <filesystem>
+#endif
+
+
+static bool path_exists(std::string& path)
+{
+    #if __GNUC__ < 8
+    return std::experimental::filesystem::exists(path);
+    #else
+    return std::filesystem::exists(path);
+    #endif
+}
 
 
 EthercatDeviceConfigurator::EthercatDeviceConfigurator(std::string path, bool startup):
@@ -74,7 +88,7 @@ const std::string &EthercatDeviceConfigurator::getSetupFilePath()
 void EthercatDeviceConfigurator::parseFile(std::string path)
 {
     //Check if file exists
-    if(!std::filesystem::exists(path))
+    if(!path_exists(path))
         throw std::runtime_error("[EthercatDeviceConfigurator] File not found: "+path);
     //Load into yaml
     YAML::Node node = YAML::LoadFile(path);
@@ -369,7 +383,7 @@ std::string EthercatDeviceConfigurator::handleFilePath(const std::string &path, 
         // Path to the configuration file is relative, we need to append it to the path of the setup file.
         result_path = setup_file_path.substr(0, setup_file_path.find_last_of("/")+1) + path;
     }
-    if(!std::filesystem::exists(result_path))
+    if(!path_exists(result_path))
         throw std::runtime_error("Path: " + result_path + " does not exist");
     return  result_path;
 }
