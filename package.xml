@@ -17,6 +17,7 @@
       Optional dependencies.
       Any single drive sdk or any combination of sdks may be used.
   <-->
+  <depend>ethercat_sdk_master</depend>
   <depend>anydrive</depend>
   <depend>elmo_ethercat_sdk</depend>
   <depend>rokubi_rsl_ethercat_sdk</depend>
