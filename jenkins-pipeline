@@ -1,2 +1,3 @@
 library 'continuous_integration_pipeline'
-ciPipeline("")
+ciPipeline("--dependencies git@bitbucket.org:leggedrobotics/anydrive_sdk.git;refactoring/ethercat_sdk_master
+https://github.com/leggedrobotics/elmo_ethercat_sdk;refactoring/ethercat_sdk_master")
