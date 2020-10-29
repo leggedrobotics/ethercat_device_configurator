@@ -16,7 +16,8 @@ public:
     {
         Elmo,
         Anydrive,
-        Rokubi
+        Rokubi,
+        NA
     };
 
     struct EthercatSlaveEntry
