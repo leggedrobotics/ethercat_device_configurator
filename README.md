@@ -3,7 +3,8 @@ Configures the EtherCAT communication with the following sdks:
 
 - anydrive_sdk
 - rokubi_rsl_ethercat_sdk
-- elmo_ethercat_sdk 
+- elmo_ethercat_sdk
+- maxon_ethercat_sdk
 
 Any single SDK or any combination of SDKs may be used.
 The build system automatically builds the EtherCAT device SDKs available in the current catkin workspace.
