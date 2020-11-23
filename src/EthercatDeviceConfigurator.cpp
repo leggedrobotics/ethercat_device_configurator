@@ -147,7 +147,7 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
                 {
                     entry.type = EthercatSlaveType::Elmo;
                 }
-                if(type_str == "Maxon")
+                else if(type_str == "Maxon")
                 {
                     entry.type = EthercatSlaveType::Maxon;
                 }
@@ -252,6 +252,7 @@ void EthercatDeviceConfigurator::setup(bool startup)
 #endif
 
         }
+            break;
         case EthercatSlaveType::Maxon:
         {
 #ifdef _MAXON_FOUND_

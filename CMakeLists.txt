@@ -19,6 +19,7 @@ find_package(catkin REQUIRED)
 
 find_package(anydrive )
 find_package(elmo_ethercat_sdk )
+find_package(maxon_ethercat_sdk )
 find_package(rokubi_rsl_ethercat_sdk )
 
 if(anydrive_FOUND)
@@ -43,6 +44,14 @@ if(elmo_ethercat_sdk_FOUND)
   )
 endif()
 
+if(maxon_ethercat_sdk_FOUND)
+  add_definitions(-D_MAXON_FOUND_)
+  set(PACKAGE_DEPENDENCIES
+    ${PACKAGE_DEPENDENCIES}
+    maxon_ethercat_sdk
+  )
+endif()
+
 foreach(sdk ${PACKAGE_DEPENDENCIES})
   message("Found EtherCAT device sdk: " ${sdk})
 endforeach()
@@ -60,6 +69,7 @@ include_directories(
   include
   ${anydrive_INCLUDE_DIRS}
   ${elmo_ethercat_sdk_INCLUDE_DIRS}
+  ${maxon_ethercat_sdk_INCLUDE_DIRS}
   ${rokubi_rsl_ethercat_sdk_INCLUDE_DIRS}
 )
 
@@ -83,6 +93,7 @@ target_link_libraries(
   ${PROJECT_NAME}
   ${anydrive_LIBRARIES}
   ${elmo_ethercat_sdk_LIBRARIES}
+  ${maxon_ethercat_sdk_LIBRARIES}
   ${rokubi_rsl_ethercat_sdk_LIBRARIES}
   ${YAML_CPP_LIBRARIES}
   stdc++fs
@@ -100,12 +111,14 @@ add_dependencies(
   ${anydrive_EXPORTED_TARGETS}
   ${rokubi_rsl_ethercat_sdk_EXPORTED_TARGETS}
   ${elmo_ethercat_sdk_EXPORTED_TARGETS}
+  ${maxon_ethercat_sdk_EXPORTED_TARGETS}
 )
 target_link_libraries(
   standalone
   ${PROJECT_NAME}
   ${anydrive_LIBRARIES}
   ${elmo_ethercat_sdk_LIBRARIES}
+  ${maxon_ethercat_sdk_LIBRARIES}
   ${rokubi_rsl_ethercat_sdk_LIBRARIES}
   ${YAML_CPP_LIBRARIES}
   #Eigen3:Eigen
