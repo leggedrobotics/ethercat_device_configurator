@@ -28,7 +28,7 @@
 #include <elmo_ethercat_sdk/Elmo.hpp>
 #endif
 #ifdef _MAXON_FOUND_
-#include <maxon_ethercat_sdk/Maxon.hpp>
+#include <maxon_epos_ethercat_sdk/Maxon.hpp>
 #endif
 #ifdef _ROKUBI_FOUND_
 #include <rokubi_rsl_ethercat_sdk/Rokubi.hpp>

@@ -19,7 +19,7 @@
   <-->
   <depend>anydrive</depend>
   <depend>elmo_ethercat_sdk</depend>
-  <depend>maxon_ethercat_sdk</depend>
+  <depend>maxon_epos_ethercat_sdk</depend>
   <depend>rokubi_rsl_ethercat_sdk</depend>
 
 </package>

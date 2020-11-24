@@ -12,7 +12,7 @@
 
 /*Maxon*/
 #ifdef _MAXON_FOUND_
-#include "maxon_ethercat_sdk/Maxon.hpp"
+#include "maxon_epos_ethercat_sdk/Maxon.hpp"
 #endif
 
 /*Bota rokubi and SenseOne sensors*/
@@ -259,7 +259,7 @@ void EthercatDeviceConfigurator::setup(bool startup)
             std::string configuration_file_path = handleFilePath(entry.config_file_path,m_setup_file_path);
             slave = maxon::Maxon::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address);
 #else
-            throw std::runtime_error("maxon_ethercat_sdk not availabe.");
+            throw std::runtime_error("maxon_epos_ethercat_sdk not availabe.");
 #endif
 
         }
