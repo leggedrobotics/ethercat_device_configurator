@@ -279,6 +279,10 @@ void EthercatDeviceConfigurator::setup(bool startup)
             {
                 pdo = anydrive::PdoTypeEnum::D;
             }
+            else if(entry.ethercat_pdo_type == "E")
+            {
+                pdo = anydrive::PdoTypeEnum::E;
+            }
             else
             {
                 throw std::runtime_error("[EthercatDeviceConfigurator] PDO unknown: " + entry.ethercat_pdo_type);
