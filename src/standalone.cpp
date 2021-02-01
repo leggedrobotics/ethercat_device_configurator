@@ -156,11 +156,15 @@ void worker()
         std::shared_ptr<maxon::Maxon> maxon_slave_ptr = std::dynamic_pointer_cast<maxon::Maxon>(slave);
 
         if (!maxonEnabledAfterStartup)
+        {
           // Set maxons to operation enabled state, do not block the call!
+          std::cout << "Setting drive to operation enabled" << std::endl;
           maxon_slave_ptr->setDriveStateViaPdo(maxon::DriveState::OperationEnabled, false);
+        }
 
         // set commands if we can
-        if (maxon_slave_ptr->getReading().getDriveState() == maxon::DriveState::OperationEnabled)
+        if (maxon_slave_ptr->lastPdoStateChangeSuccessful() &&
+            maxon_slave_ptr->getReading().getDriveState() == maxon::DriveState::OperationEnabled)
         {
           maxon::Command command;
           command.setTargetVelocity(-10);
