@@ -166,7 +166,8 @@ void worker()
             maxon_slave_ptr->getReading().getDriveState() == maxon::DriveState::OperationEnabled)
         {
           maxon::Command command;
-          command.setTargetVelocity(0);
+          auto reading = maxon_slave_ptr->getReading();
+          command.setTargetPosition(reading.getActualPosition() - 10);
           maxon_slave_ptr->stageCommand(command);
         }
         else
@@ -185,7 +186,7 @@ void worker()
         // Constant update rate
         // std::this_thread::sleep_until(start_time + std::chrono::milliseconds(1));
 
-        auto reading = maxon_slave_ptr->getReading();
+        // auto reading = maxon_slave_ptr->getReading();
         // std::cout << "Maxon '" << maxon_slave_ptr->getName() << "': "
         //         << "velocity: " << reading.getActualVelocity() << " rad/s\n";
 #endif
@@ -196,7 +197,7 @@ void worker()
     elmoEnabledAfterStartup = true;
 #endif
 #ifdef _MAXON_FOUND_
-      maxonEnabledAfterStartup = true;
+    maxonEnabledAfterStartup = true;
 #endif
   }
 }

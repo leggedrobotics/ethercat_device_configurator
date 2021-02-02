@@ -1,5 +1,5 @@
 ethercat_master:
-  time_step: 0.0025
+  time_step: 0.0015
   update_rate_too_low_warn_threshold: 50
 
 ethercat_devices:
