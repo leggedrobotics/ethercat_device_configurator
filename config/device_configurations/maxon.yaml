@@ -16,12 +16,12 @@ Hardware:
   # rx_pdo_type: "RxPdoPVM"
   # tx_pdo_type: "TxPdoPVM"
   # mode_of_operation: "ProfiledVelocityMode"
-  rx_pdo_type: "RxPdoCST"
-  tx_pdo_type: "TxPdoCST"
-  mode_of_operation: "CyclicSynchronousTorqueMode"
-  # rx_pdo_type: "RxPdoCSV"
-  # tx_pdo_type: "TxPdoCSV"
-  # mode_of_operation: "CyclicSynchronousVelocityMode"
+  # rx_pdo_type: "RxPdoCST"
+  # tx_pdo_type: "TxPdoCST"
+  # mode_of_operation: "CyclicSynchronousTorqueMode"
+  rx_pdo_type: "RxPdoCSV"
+  tx_pdo_type: "TxPdoCSV"
+  mode_of_operation: "CyclicSynchronousVelocityMode"
   use_multiple_modes_of_operation: false
   position_encoder_resolution: 4096
   gear_ratio: [1, 1]
@@ -36,5 +36,5 @@ Hardware:
   min_position: 0
   max_position: 0 # Disable checks
   max_profile_velocity: 50
-  quick_stop_decel: 5000
-  profile_decel: 5000
+  quick_stop_decel: 1000
+  profile_decel: 1000

@@ -151,14 +151,13 @@ void worker()
 #ifdef _MAXON_FOUND_
 
         // Keep constant update rate
-        auto start_time = std::chrono::steady_clock::now();
+        // auto start_time = std::chrono::steady_clock::now();
 
         std::shared_ptr<maxon::Maxon> maxon_slave_ptr = std::dynamic_pointer_cast<maxon::Maxon>(slave);
 
         if (!maxonEnabledAfterStartup)
         {
           // Set maxons to operation enabled state, do not block the call!
-          std::cout << "Setting drive to operation enabled" << std::endl;
           maxon_slave_ptr->setDriveStateViaPdo(maxon::DriveState::OperationEnabled, false);
         }
 
@@ -167,24 +166,24 @@ void worker()
             maxon_slave_ptr->getReading().getDriveState() == maxon::DriveState::OperationEnabled)
         {
           maxon::Command command;
-          command.setTargetVelocity(-10);
+          command.setTargetVelocity(0);
           maxon_slave_ptr->stageCommand(command);
         }
         else
         {
           MELO_WARN_STREAM("Maxon '" << maxon_slave_ptr->getName()
                                      << "': " << maxon_slave_ptr->getReading().getDriveState());
-          if (counter % 10 == 0)
-          {
-            maxon_slave_ptr->printDiagnosis();
-          }
+          // if (counter % 10 == 0)
+          // {
+          //   maxon_slave_ptr->printDiagnosis();
+          // }
           // maxon_slave_ptr->printDiagnosis();
           // maxon_slave_ptr->setDriveStateViaPdo(
           //     maxon::DriveState::OperationEnabled, false);
         }
 
         // Constant update rate
-        std::this_thread::sleep_until(start_time + std::chrono::milliseconds(1));
+        // std::this_thread::sleep_until(start_time + std::chrono::milliseconds(1));
 
         auto reading = maxon_slave_ptr->getReading();
         // std::cout << "Maxon '" << maxon_slave_ptr->getName() << "': "
@@ -197,7 +196,7 @@ void worker()
     elmoEnabledAfterStartup = true;
 #endif
 #ifdef _MAXON_FOUND_
-    maxonEnabledAfterStartup = true;
+      maxonEnabledAfterStartup = true;
 #endif
   }
 }
