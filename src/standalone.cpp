@@ -166,8 +166,10 @@ void worker()
             maxon_slave_ptr->getReading().getDriveState() == maxon::DriveState::OperationEnabled)
         {
           maxon::Command command;
+          command.setModeOfOperation(maxon::ModeOfOperationEnum::CyclicSynchronousTorqueMode);
           auto reading = maxon_slave_ptr->getReading();
-          command.setTargetPosition(reading.getActualPosition() - 10);
+          command.setTargetPosition(reading.getActualPosition() + 10);
+          command.setTargetTorque(-0.5);
           maxon_slave_ptr->stageCommand(command);
         }
         else

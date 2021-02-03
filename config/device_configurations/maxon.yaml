@@ -13,19 +13,9 @@ Reading:
   fault_storage_capacity: 100
 
 Hardware:
-  # rx_pdo_type: "RxPdoPVM"
-  # tx_pdo_type: "TxPdoPVM"
-  # mode_of_operation: "ProfiledVelocityMode"
-  rx_pdo_type: "RxPdoCSP"
-  tx_pdo_type: "TxPdoCSP"
-  mode_of_operation: "CyclicSynchronousPositionMode"
-  # rx_pdo_type: "RxPdoCST"
-  # tx_pdo_type: "TxPdoCST"
-  # mode_of_operation: "CyclicSynchronousTorqueMode"
-  # rx_pdo_type: "RxPdoCSTCSV"
-  # tx_pdo_type: "TxPdoCSTCSV"
-  # mode_of_operation: "CyclicSynchronousVelocityMode"
-  use_multiple_modes_of_operation: true
+  mode_of_operation:
+  - CyclicSynchronousTorqueMode
+  - CyclicSynchronousPositionMode
   position_encoder_resolution: 4096
   gear_ratio: [1, 1]
   motor_constant: 1.0
