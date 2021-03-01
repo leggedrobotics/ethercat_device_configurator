@@ -43,7 +43,7 @@
 #include <elmo_ethercat_sdk/Elmo.hpp>
 #endif
 #ifdef _ROKUBI_FOUND_
-#include <rokubi_rsl_ethercat_sdk/Rokubi.hpp>
+#include <rokubimini_ethercat/RokubiminiEthercat.hpp>
 #endif
 #include <thread>
 #include <csignal>
@@ -114,7 +114,7 @@ void worker()
             else if(configurator->getInfoForSlave(slave).type == EthercatDeviceConfigurator::EthercatSlaveType::Rokubi)
             {
 #ifdef _ROKUBI_FOUND_
-                std::shared_ptr<rokubi::Rokubi> rokubi_slave_ptr = std::dynamic_pointer_cast<rokubi::Rokubi>(slave);
+                std::shared_ptr<rokubimini::ethercat::RokubiminiEthercat> rokubi_slave_ptr = std::dynamic_pointer_cast<rokubimini::ethercat::RokubiminiEthercat>(slave);
                 // Do things with the Rokubi sensors here
 #endif
             }
@@ -201,7 +201,7 @@ void anydriveReadingCb(const std::string& name, const anydrive::ReadingExtended&
 }
 #endif
 #ifdef _ROKUBI_FOUND_
-void rokubiReadingCb(const std::string& name, const rokubi::Reading& reading)
+void rokubiReadingCb(const std::string& name, const rokubimini::Reading& reading)
 {
     // std::cout << "Reading of rokubi '" << name << "'\n"
     //           << "Force X: " << reading.getForceX() << "\n\n";
@@ -240,7 +240,7 @@ int main(int argc, char**argv)
     }
 #endif
 #if _ROKUBI_FOUND_
-    for(const auto& device : configurator->getSlavesOfType<rokubi::Rokubi>()){
+    for(const auto& device : configurator->getSlavesOfType<rokubimini::ethercat::RokubiminiEthercat>()){
         device->addReadingCb(rokubiReadingCb);
     }
 #endif
