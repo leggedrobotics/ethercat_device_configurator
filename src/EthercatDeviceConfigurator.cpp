@@ -31,7 +31,7 @@
 
 /*Bota rokubi and SenseOne sensors*/
 #ifdef _ROKUBI_FOUND_
-#include "rokubi_rsl_ethercat_sdk/Rokubi.hpp"
+#include "rokubimini_ethercat/RokubiminiEthercat.hpp"
 #endif
 
 /*yaml-cpp*/
@@ -180,7 +180,7 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
             }
             else
             {
-                throw std::runtime_error("[EthercatDeviceConfigurator] Node: " + child.Tag() + "has no entry type");
+                throw std::runtime_error("[EthercatDeviceConfigurator] Node: " + child.Tag() + " has no entry type");
             }
 
             //name - entry
@@ -191,7 +191,7 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
             }
             else
             {
-                throw std::runtime_error("[EthercatDeviceConfigurator] Node: " + child.Tag() + "has no entry name");
+                throw std::runtime_error("[EthercatDeviceConfigurator] Node: " + child.Tag() + " has no entry name");
             }
 
             //configuration_file - entry
@@ -201,7 +201,7 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
             }
             else
             {
-                throw std::runtime_error("[EthercatDeviceConfigurator] Node: " + child.Tag() + "has no entry configuration_file");
+                throw std::runtime_error("[EthercatDeviceConfigurator] Node: " + child.Tag() + " has no entry configuration_file");
             }
 
             //ethercat_bus_address - entry
@@ -211,7 +211,7 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
             }
             else
             {
-                throw std::runtime_error("[EthercatDeviceConfigurator] Node: " + child.Tag() + "has no entry ethercat_bus_address");
+                throw std::runtime_error("[EthercatDeviceConfigurator] Node: " + child.Tag() + " has no entry ethercat_bus_address");
             }
 
             //ethercat_bus - entry
@@ -221,11 +221,11 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
             }
             else
             {
-                throw std::runtime_error("[EthercatDeviceConfigurator] Node: " + child.Tag() + "has no entry ethercat_bus");
+                throw std::runtime_error("[EthercatDeviceConfigurator] Node: " + child.Tag() + " has no entry ethercat_bus");
             }
 
             //ethercat_pdo_type - entry
-            if(entry.type == EthercatSlaveType::Anydrive)
+            if(entry.type == EthercatSlaveType::Anydrive || entry.type == EthercatSlaveType::Rokubi)
             {
                 if(child["ethercat_pdo_type"])
                 {
@@ -233,7 +233,7 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
                 }
                 else
                 {
-                    throw std::runtime_error("[EthercatDeviceConfigurator] Node: " + child.Tag() + "has no entry ethercat_pdo_type");
+                    throw std::runtime_error("[EthercatDeviceConfigurator] Node: " + child.Tag() + " has no entry ethercat_pdo_type");
                 }
             }
 
@@ -320,11 +320,37 @@ void EthercatDeviceConfigurator::setup(bool startup)
         case EthercatSlaveType::Rokubi:
         {
 #ifdef _ROKUBI_FOUND_
+            rokubimini::ethercat::PdoTypeEnum pdo = rokubimini::ethercat::PdoTypeEnum::NA;
+            if(entry.ethercat_pdo_type == "A")
+            {
+                pdo = rokubimini::ethercat::PdoTypeEnum::A;
+            }
+            else if(entry.ethercat_pdo_type == "B")
+            {
+                pdo = rokubimini::ethercat::PdoTypeEnum::B;
+            }
+            else if(entry.ethercat_pdo_type == "C")
+            {
+                pdo = rokubimini::ethercat::PdoTypeEnum::C;
+            }
+            else if(entry.ethercat_pdo_type == "Z")
+            {
+                pdo = rokubimini::ethercat::PdoTypeEnum::Z;
+            }
+            else if(entry.ethercat_pdo_type == "EXTIMU")
+            {
+                pdo = rokubimini::ethercat::PdoTypeEnum::EXTIMU;
+            }
+            else
+            {
+                throw std::runtime_error("[EthercatDeviceConfigurator] PDO unknown: " + entry.ethercat_pdo_type);
+            }
+
             //Handle configuration file path
             std::string configuration_file_path = handleFilePath(entry.config_file_path,m_setup_file_path);
-            slave = rokubi::Rokubi::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address);
+            slave = rokubimini::ethercat::RokubiminiEthercat::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address, pdo);
 #else
-            throw std::runtime_error("rokubi_ethercat_sdk not available");
+            throw std::runtime_error("rokubimini_ethercat_sdk not available");
 #endif
         }
             break;
