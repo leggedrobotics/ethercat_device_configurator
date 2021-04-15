@@ -96,7 +96,7 @@ max_motor_velocity:                 680.7
 # Unit                              Nm
 # Range                             > 0.0
 # Default                           Value stored on device.
-max_joint_torque:                   40.0
+max_joint_torque:                   140.0
 
 # Parameter                         current_integrator_saturation
 # Description                       Sets the integrator saturation the current
@@ -259,7 +259,7 @@ imu:
   # Unit                            -
   # Range                           {true, false}
   # Default                         Value stored on device.
-  enable:                           true
+  enable:                           false
 
   # Parameter                       accelerometer_range
   # Description                     Sets the range of the IMU's accelerometer.
@@ -389,14 +389,14 @@ modes:
     # Unit                          -
     # Range                         (-.inf, .inf)
     # Default                       None (mandatory parameter)
-    p:                              0.6
+    p:                              0.7
     i:                              0.16
     d:                              0.0
 
   # More control gains              
-- name:                             JointPosition
+- name:                             MotorVelocity
   gains:                            
-    p:                              104.0
+    p:                              70.0
     i:                              0.078
     d:                              0.163
 
@@ -450,8 +450,10 @@ goal_states:
   #                                  "NA",
   #                                  "Standby"}
   # Default                         "NA"
-  startup:                          "NA"
-  shutdown:                         "NA"
+  startup:                          "Calibrate"
+  shutdown:                         "Standby"
+  
+dgainFilterCutoffFrequency: 100
 
 # Parameter                         gear_joint_velocity_filter
 # Description                       List containing gear and joint
@@ -461,82 +463,3 @@ goal_states:
 # Unit                              -
 # Range                             -
 # Default                           []
-gear_joint_velocity_filter:
-
-  # Parameter                       type
-  # Description                     Type of filter used for estimation.
-  #                                 0 - No filter.
-  #                                 1 - Kalman filter.
-  #                                 2 - EMA filter.
-  # Usage                           Firmware
-  # Type                            uint32
-  # Unit                            -
-  # Range                           {0, 1, 2}
-  # Default                         Value stored on device.
-  type:                             2
-
-  # Parameter                       kf_noise_variance
-  # Description                     Kalman filter variance parameter.
-  # Usage                           Firmware
-  # Type                            float
-  # Unit                            -
-  # Range                           [0.0, .inf]
-  # Default                         Value stored on device.
-  kf_noise_variance:                0.005
-
-  # Parameter                       kf_lambda_2
-  # Description                     Kalman filter lambda^2 parameter.
-  # Usage                           Firmware
-  # Type                            float
-  # Unit                            -
-  # Range                           [0.0, .inf]
-  # Default                         Value stored on device.
-  kf_lambda_2:                      1000.0
-
-  # Parameter                       kf_gamma
-  # Description                     Kalman filter gamma parameter.
-  # Usage                           Firmware
-  # Type                            float
-  # Unit                            -
-  # Range                           [0.0, .inf]
-  # Default                         Value stored on device.
-  kf_gamma:                         0.1
-
-  # Parameter                       ema_alpha
-  # Description                     EMA filter alpha parameter.
-  # Usage                           Firmware
-  # Type                            float
-  # Unit                            -
-  # Range                           [0.0, .inf]
-  # Default                         Value stored on device.
-  ema_alpha:                        0.1
-
-# Parameter                         joint_velocity_filter_for_acceleration
-# Description                       List containing joint velocity for
-#                                   acceleration filter parameters.
-# Usage                             Firmware
-# Type                              Map
-# Unit                              -
-# Range                             -
-# Default                           []
-joint_velocity_filter_for_acceleration:
-  type:                             1
-  kf_noise_variance:                0.005
-  kf_lambda_2:                      1000.0
-  kf_gamma:                         0.1
-  ema_alpha:                        0.005
-
-# Parameter                         joint_acceleration_filter
-# Description                       List containing joint acceleration
-#                                   filter parameters.
-# Usage                             Firmware
-# Type                              Map
-# Unit                              -
-# Range                             -
-# Default                           []
-joint_acceleration_filter:
-  type:                             1
-  kf_noise_variance:                20.0
-  kf_lambda_2:                      1000.0
-  kf_gamma:                         0.1
-  ema_alpha:                        0.01
