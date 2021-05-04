@@ -183,21 +183,11 @@ void worker()
                 {
                     MELO_WARN_STREAM("Maxon '" << maxon_slave_ptr->getName()
                                                                          << "': " << maxon_slave_ptr->getReading().getDriveState());
-                    // if (counter % 10 == 0)
-                    // {
-                    //     maxon_slave_ptr->printDiagnosis();
-                    // }
-                    // maxon_slave_ptr->printDiagnosis();
-                    // maxon_slave_ptr->setDriveStateViaPdo(
-                    //         maxon::DriveState::OperationEnabled, false);
                 }
 
                 // Constant update rate
                 // std::this_thread::sleep_until(start_time + std::chrono::milliseconds(1));
 
-                // auto reading = maxon_slave_ptr->getReading();
-                // std::cout << "Maxon '" << maxon_slave_ptr->getName() << "': "
-                //                 << "velocity: " << reading.getActualVelocity() << " rad/s\n";
 #endif
             }
         }
