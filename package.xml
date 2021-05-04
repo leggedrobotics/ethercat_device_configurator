@@ -33,7 +33,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
       Optional dependencies.
       Any single drive sdk or any combination of sdks may be used.
   <-->
-  <depend>anydrive</depend>
   <depend>elmo_ethercat_sdk</depend>
   <depend>maxon_epos_ethercat_sdk</depend>
   <depend>rokubimini_ethercat</depend>
