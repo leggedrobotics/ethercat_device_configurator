@@ -24,6 +24,11 @@
 #include "elmo_ethercat_sdk/Elmo.hpp"
 #endif
 
+/*Maxon*/
+#ifdef _MAXON_FOUND_
+#include "maxon_epos_ethercat_sdk/Maxon.hpp"
+#endif
+
 /*Bota rokubi and SenseOne sensors*/
 #ifdef _ROKUBI_FOUND_
 #include "rokubimini_ethercat/RokubiminiEthercat.hpp"
@@ -156,6 +161,10 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
                 {
                     entry.type = EthercatSlaveType::Elmo;
                 }
+                else if(type_str == "Maxon")
+                {
+                    entry.type = EthercatSlaveType::Maxon;
+                }
                 else if(type_str == "Anydrive")
                 {
                     entry.type = EthercatSlaveType::Anydrive;
@@ -254,6 +263,17 @@ void EthercatDeviceConfigurator::setup(bool startup)
             slave = elmo::Elmo::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address);
 #else
             throw std::runtime_error("elmo_ethercat_sdk not availabe.");
+#endif
+
+        }
+            break;
+        case EthercatSlaveType::Maxon:
+        {
+#ifdef _MAXON_FOUND_
+            std::string configuration_file_path = handleFilePath(entry.config_file_path,m_setup_file_path);
+            slave = maxon::Maxon::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address);
+#else
+            throw std::runtime_error("maxon_epos_ethercat_sdk not availabe.");
 #endif
 
         }

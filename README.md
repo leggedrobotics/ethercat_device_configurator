@@ -2,8 +2,10 @@
 Configures the EtherCAT communication with the following sdks:
 
 - anydrive_sdk
+- elmo_ethercat_sdk
 - rokubimini_ethercat_sdk
 - elmo_ethercat_sdk 
+- maxon_epos_ethercat_sdk
 
 Any single SDK or any combination of SDKs may be used.
 The build system automatically builds the EtherCAT device SDKs available in the current catkin workspace.
@@ -17,11 +19,9 @@ Requires gcc ≥ 7.5 (default for Ubuntu ≥ 18.04).
 - __optional__ anydrive_sdk (refactoring/ethercat_sdk_master)
 - __optional__ rokubimini_ethercat_sdk (refactoring/ethercat_sdk_master)
 - __optional__ elmo_ethercat_sdk (refactoring/ethercat_sdk_master)
+- __optional__ maxon_epos_ethercat_sdk (refactoring/ethercat_sdk_master)
 - ethercat_sdk_master (master)
 - soem_interface (release)
 - message_logger (master)
 - any_node (master)
 - yaml-cpp (system install)
-
-
-

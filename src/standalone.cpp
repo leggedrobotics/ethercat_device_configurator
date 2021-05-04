@@ -42,6 +42,9 @@
 #ifdef _ELMO_FOUND_
 #include <elmo_ethercat_sdk/Elmo.hpp>
 #endif
+#ifdef _MAXON_FOUND_
+#include <maxon_epos_ethercat_sdk/Maxon.hpp>
+#endif
 #ifdef _ROKUBI_FOUND_
 #include <rokubimini_ethercat/RokubiminiEthercat.hpp>
 #endif
@@ -66,6 +69,11 @@ void worker()
     // Flag to set the drive state for the elmos on first startup
 #ifdef _ELMO_FOUND_
     bool elmoEnabledAfterStartup = false;
+#endif
+    // Flag to set the drive state for the elmos on first startup
+#ifdef _MAXON_FOUND_
+    bool maxonEnabledAfterStartup = false;
+    // bool maxonOperational = false;
 #endif
     /*
     ** The communication update loop.
@@ -141,13 +149,54 @@ void worker()
                 }
                 auto reading = elmo_slave_ptr->getReading();
                 // std::cout << "Elmo '" << elmo_slave_ptr->getName() << "': "
-                //         << "velocity: " << reading.getActualVelocity() << " rad/s\n";
+                //                 << "velocity: " << reading.getActualVelocity() << " rad/s\n";
+#endif
+            }
+            // Maxon
+            else if (configurator->getInfoForSlave(slave).type == EthercatDeviceConfigurator::EthercatSlaveType::Maxon)
+            {
+#ifdef _MAXON_FOUND_
+
+                // Keep constant update rate
+                // auto start_time = std::chrono::steady_clock::now();
+
+                std::shared_ptr<maxon::Maxon> maxon_slave_ptr = std::dynamic_pointer_cast<maxon::Maxon>(slave);
+
+                if (!maxonEnabledAfterStartup)
+                {
+                    // Set maxons to operation enabled state, do not block the call!
+                    maxon_slave_ptr->setDriveStateViaPdo(maxon::DriveState::OperationEnabled, false);
+                }
+
+                // set commands if we can
+                if (maxon_slave_ptr->lastPdoStateChangeSuccessful() &&
+                        maxon_slave_ptr->getReading().getDriveState() == maxon::DriveState::OperationEnabled)
+                {
+                    maxon::Command command;
+                    command.setModeOfOperation(maxon::ModeOfOperationEnum::CyclicSynchronousTorqueMode);
+                    auto reading = maxon_slave_ptr->getReading();
+                    command.setTargetPosition(reading.getActualPosition() + 10);
+                    command.setTargetTorque(-0.5);
+                    maxon_slave_ptr->stageCommand(command);
+                }
+                else
+                {
+                    MELO_WARN_STREAM("Maxon '" << maxon_slave_ptr->getName()
+                                                                         << "': " << maxon_slave_ptr->getReading().getDriveState());
+                }
+
+                // Constant update rate
+                // std::this_thread::sleep_until(start_time + std::chrono::milliseconds(1));
+
 #endif
             }
         }
         counter++;
 #ifdef _ELMO_FOUND_
         elmoEnabledAfterStartup = true;
+#endif
+#ifdef _MAXON_FOUND_
+        maxonEnabledAfterStartup = true;
 #endif
     }
 }
