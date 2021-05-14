@@ -36,6 +36,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
   <depend>anydrive</depend>
   <depend>elmo_ethercat_sdk</depend>
   <depend>maxon_epos_ethercat_sdk</depend>
-  <depend>rokubimini_ethercat</depend>
+  <depend>rokubimini_rsl_ethercat</depend>
 
 </package>

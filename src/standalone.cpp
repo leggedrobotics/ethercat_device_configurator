@@ -46,7 +46,7 @@
 #include <maxon_epos_ethercat_sdk/Maxon.hpp>
 #endif
 #ifdef _ROKUBI_FOUND_
-#include <rokubimini_ethercat/RokubiminiEthercat.hpp>
+#include <rokubimini_rsl_ethercat/RokubiminiEthercat.hpp>
 #endif
 #include <thread>
 #include <csignal>

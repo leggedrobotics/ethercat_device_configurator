@@ -33,7 +33,7 @@ find_package(catkin REQUIRED)
 find_package(anydrive )
 find_package(elmo_ethercat_sdk )
 find_package(maxon_epos_ethercat_sdk )
-find_package(rokubimini_ethercat )
+find_package(rokubimini_rsl_ethercat )
 
 if(anydrive_FOUND)
   add_definitions(-D_ANYDRIVE_FOUND_)
@@ -42,11 +42,11 @@ if(anydrive_FOUND)
     anydrive
   )
 endif()
-if(rokubimini_ethercat_FOUND)
+if(rokubimini_rsl_ethercat_FOUND)
   add_definitions(-D_ROKUBI_FOUND_)
   set(PACKAGE_DEPENDENCIES
     ${PACKAGE_DEPENDENCIES}
-    rokubimini_ethercat
+    rokubimini_rsl_ethercat
   )
 endif()
 if(elmo_ethercat_sdk_FOUND)
@@ -83,7 +83,7 @@ include_directories(
   ${anydrive_INCLUDE_DIRS}
   ${elmo_ethercat_sdk_INCLUDE_DIRS}
   ${maxon_epos_ethercat_sdk_INCLUDE_DIRS}
-  ${rokubimini_ethercat_INCLUDE_DIRS}
+  ${rokubimini_rsl_ethercat_INCLUDE_DIRS}
 )
 
 
@@ -101,7 +101,7 @@ target_link_libraries(
   ${anydrive_LIBRARIES}
   ${elmo_ethercat_sdk_LIBRARIES}
   ${maxon_epos_ethercat_sdk_LIBRARIES}
-  ${rokubimini_ethercat_LIBRARIES}
+  ${rokubimini_rsl_ethercat_LIBRARIES}
   ${YAML_CPP_LIBRARIES}
   stdc++fs
 )
@@ -116,7 +116,7 @@ add_dependencies(
   standalone
   ${PROJECT_NAME}
   ${anydrive_EXPORTED_TARGETS}
-  ${rokubimini_ethercat_EXPORTED_TARGETS}
+  ${rokubimini_rsl_ethercat_EXPORTED_TARGETS}
   ${elmo_ethercat_sdk_EXPORTED_TARGETS}
   ${maxon_epos_ethercat_sdk_EXPORTED_TARGETS}
 )
@@ -126,7 +126,7 @@ target_link_libraries(
   ${anydrive_LIBRARIES}
   ${elmo_ethercat_sdk_LIBRARIES}
   ${maxon_epos_ethercat_sdk_LIBRARIES}
-  ${rokubimini_ethercat_LIBRARIES}
+  ${rokubimini_rsl_ethercat_LIBRARIES}
   ${YAML_CPP_LIBRARIES}
   -pthread
   stdc++fs
