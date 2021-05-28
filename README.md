@@ -16,8 +16,8 @@ In the future this will be changed to a plugin architecture
 Requires gcc ≥ 7.5 (default for Ubuntu ≥ 18.04).
 
 ### Dependencies
-- __optional__ anydrive_sdk (refactoring/ethercat_sdk_master)
-- __optional__ rokubimini_ethercat_sdk (refactoring/ethercat_sdk_master)
+- __optional__ anydrive_sdk (master)
+- __optional__ rokubimini_ethercat_sdk (master)
 - __optional__ elmo_ethercat_sdk (master)
 - __optional__ maxon_epos_ethercat_sdk (master)
 - ethercat_sdk_master (master)

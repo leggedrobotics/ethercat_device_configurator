@@ -31,7 +31,7 @@
 
 /*Bota rokubi and SenseOne sensors*/
 #ifdef _ROKUBI_FOUND_
-#include "rokubimini_ethercat/RokubiminiEthercat.hpp"
+#include "rokubimini_rsl_ethercat/RokubiminiEthercat.hpp"
 #endif
 
 /*yaml-cpp*/
