@@ -26,9 +26,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
   <maintainer email="nachtigall@mavt.ethz.ch">Lennart Nachtigall</maintainer>
   <url type="website">https://github.com/leggedrobotics/ethercat_device_configurator</url>
   
-  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
 
-
+  <depend>ethercat_sdk_master</depend>
   <!-->
       Optional dependencies.
       Any single drive sdk or any combination of sdks may be used.
@@ -37,5 +37,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
   <depend>elmo_ethercat_sdk</depend>
   <depend>maxon_epos_ethercat_sdk</depend>
   <depend>rokubimini_rsl_ethercat</depend>
-
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
 </package>
