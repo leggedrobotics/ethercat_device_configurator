@@ -32,6 +32,7 @@ find_package(ethercat_sdk_master REQUIRED)
 
 find_package(anydrive QUIET)
 find_package(elmo_ethercat_sdk QUIET)
+find_package(mps_ethercat_sdk QUIET)
 find_package(maxon_epos_ethercat_sdk QUIET)
 find_package(rokubimini_rsl_ethercat QUIET)
 
@@ -45,9 +46,12 @@ if(rokubimini_rsl_ethercat_FOUND)
 endif()
 if(elmo_ethercat_sdk_FOUND)
   add_definitions(-D_ELMO_FOUND_)
+  LIST(APPEND PACKAGE_DEPENDENCIES mps_ethercat_sdk)
+endif()
+if(mps_ethercat_sdk_FOUND)
+  add_definitions(-D_MPSDRIVE_FOUND_)
   LIST(APPEND PACKAGE_DEPENDENCIES elmo_ethercat_sdk)
 endif()
-
 if(maxon_epos_ethercat_sdk_FOUND)
   add_definitions(-D_MAXON_FOUND_)
   LIST(APPEND PACKAGE_DEPENDENCIES maxon_epos_ethercat_sdk)
@@ -100,6 +104,10 @@ install(
 install(
     DIRECTORY include/
     DESTINATION include
+)
+install( #requries rebuild if changes made in src folder --> enable sym-link install in colcon.
+    DIRECTORY example_config/
+    DESTINATION bin
 )
 
 ament_package()

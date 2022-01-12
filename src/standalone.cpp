@@ -36,11 +36,15 @@
  */
 #include "ethercat_device_configurator/EthercatDeviceConfigurator.hpp"
 
+//TODO could this be more dynamic with pluginlib?
 #ifdef _ANYDRIVE_FOUND_
 #include <anydrive/Anydrive.hpp>
 #endif
 #ifdef _ELMO_FOUND_
 #include <elmo_ethercat_sdk/Elmo.hpp>
+#endif
+#ifdef _MPSDRIVE_FOUND_
+#include <mps_ethercat_sdk/MPSDrive.hpp>
 #endif
 #ifdef _MAXON_FOUND_
 #include <maxon_epos_ethercat_sdk/Maxon.hpp>
@@ -48,8 +52,10 @@
 #ifdef _ROKUBI_FOUND_
 #include <rokubimini_rsl_ethercat/RokubiminiEthercat.hpp>
 #endif
+
 #include <thread>
 #include <csignal>
+
 std::unique_ptr<std::thread> worker_thread;
 bool abrt = false;
 
@@ -150,6 +156,28 @@ void worker()
                 auto reading = elmo_slave_ptr->getReading();
                 // std::cout << "Elmo '" << elmo_slave_ptr->getName() << "': "
                 //                 << "velocity: " << reading.getActualVelocity() << " rad/s\n";
+#endif
+            }
+              // Elmo
+            else if(configurator->getInfoForSlave(slave).type == EthercatDeviceConfigurator::EthercatSlaveType::MPSDrive)
+            {
+#ifdef _MPSDRIVE_FOUND_
+              std::shared_ptr<mps_ethercat_sdk::MPSDrive> mpsDrive = std::dynamic_pointer_cast<mps_ethercat_sdk::MPSDrive>(slave);
+                // Set elmos to operation enabled state, do not block the call!
+                mpsDrive->setDriveStateViaPdo(mps_ethercat_sdk::DriveState::OperationEnabled, false);
+              // set commands if we can
+              if(mpsDrive->lastPdoStateChangeSuccessful() && mpsDrive->getReading().getDriveState() == mps_ethercat_sdk::DriveState::OperationEnabled)
+              {
+                mps_ethercat_sdk::Command command;
+                command.setActuatorVelocityDesired(100);
+                mpsDrive->stageCommand(command);
+              }
+              else
+              {
+                MELO_WARN_STREAM("MPS '" << mpsDrive->getName() << "': " << mpsDrive->getReading().getDriveState());
+              }
+              auto reading = mpsDrive->getReading();
+               std::cout << "MPSDrive:" << mpsDrive->getName() << " :\n "<< reading << std::endl;
 #endif
             }
             // Maxon
@@ -330,6 +358,16 @@ int main(int argc, char**argv)
             std::cout << "Putting slave into operational mode: " << any_slave_ptr->getName() << " : " << any_slave_ptr->getAddress() << std::endl;
         }
 #endif
+#ifdef _MPSDRIVE_FOUND_
+      if(configurator->getInfoForSlave(slave).type == EthercatDeviceConfigurator::EthercatSlaveType::MPSDrive)
+        {
+            // Downcasting using shared pointers
+            mps_ethercat_sdk::MPSDrive::SharedPtr mpsSlave = std::dynamic_pointer_cast<mps_ethercat_sdk::MPSDrive>(slave);
+            mpsSlave->setDriveStateViaPdo(mps_ethercat_sdk::DriveState::OperationEnabled, true);
+            std::cout << "Putting slave into operational mode: " << mpsSlave->getName() << " : " << mpsSlave->getAddress() << std::endl;
+        }
+#endif
+
     }
 
 

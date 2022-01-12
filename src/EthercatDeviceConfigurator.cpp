@@ -24,6 +24,11 @@
 #include "elmo_ethercat_sdk/Elmo.hpp"
 #endif
 
+/*MPS*/
+#ifdef _MPSDRIVE_FOUND_
+#include "mps_ethercat_sdk/MPSDrive.hpp"
+#endif
+
 /*Maxon*/
 #ifdef _MAXON_FOUND_
 #include "maxon_epos_ethercat_sdk/Maxon.hpp"
@@ -161,6 +166,10 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
                 {
                     entry.type = EthercatSlaveType::Elmo;
                 }
+                else if(type_str == "MPSDrive")
+                {
+                  entry.type = EthercatSlaveType::MPSDrive;
+                }
                 else if(type_str == "Maxon")
                 {
                     entry.type = EthercatSlaveType::Maxon;
@@ -266,6 +275,15 @@ void EthercatDeviceConfigurator::setup(bool startup)
 #endif
 
         }
+          case EthercatSlaveType::MPSDrive:
+          {
+#ifdef _MPSDRIVE_FOUND_
+            std::string configuration_file_path = handleFilePath(entry.config_file_path,m_setup_file_path);
+            slave = mps_ethercat_sdk::MPSDrive::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address);
+#else
+            throw std::runtime_error("mps_ethercat_sdk not availabe, dependency not found.");
+#endif
+          }
             break;
         case EthercatSlaveType::Maxon:
         {

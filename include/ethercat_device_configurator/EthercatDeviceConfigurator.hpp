@@ -29,6 +29,7 @@ public:
     enum class EthercatSlaveType
     {
         Elmo,
+        MPSDrive,
         Maxon,
         Anydrive,
         Rokubi,
