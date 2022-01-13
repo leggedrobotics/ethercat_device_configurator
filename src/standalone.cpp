@@ -164,20 +164,24 @@ void worker()
 #ifdef _MPSDRIVE_FOUND_
               std::shared_ptr<mps_ethercat_sdk::MPSDrive> mpsDrive = std::dynamic_pointer_cast<mps_ethercat_sdk::MPSDrive>(slave);
                 // Set elmos to operation enabled state, do not block the call!
-                mpsDrive->setDriveStateViaPdo(mps_ethercat_sdk::DriveState::OperationEnabled, false);
+                //mpsDrive->setDriveStateViaPdo(mps_ethercat_sdk::DriveState::OperationEnabled, false);
               // set commands if we can
               if(mpsDrive->lastPdoStateChangeSuccessful() && mpsDrive->getReading().getDriveState() == mps_ethercat_sdk::DriveState::OperationEnabled)
               {
                 mps_ethercat_sdk::Command command;
-                command.setActuatorVelocityDesired(100);
+                command.setActuatorVelocityDesired(10);
+                //command.setKp(1.0);
+                command.setKd(0.003);
                 mpsDrive->stageCommand(command);
+                MELO_DEBUG_STREAM("Staged command");
+                auto reading = mpsDrive->getReading();
+                std::cout << "MPSDrive:" << mpsDrive->getName() << " :\n "<< reading << std::endl;
               }
               else
               {
                 MELO_WARN_STREAM("MPS '" << mpsDrive->getName() << "': " << mpsDrive->getReading().getDriveState());
               }
-              auto reading = mpsDrive->getReading();
-               std::cout << "MPSDrive:" << mpsDrive->getName() << " :\n "<< reading << std::endl;
+
 #endif
             }
             // Maxon
@@ -339,6 +343,7 @@ int main(int argc, char**argv)
     }
 
     // Start the PDO loop in a new thread.
+    std::cout << "[Standalone example] started update worker" << std::endl;
     worker_thread = std::make_unique<std::thread>(&worker);
 
     /*
@@ -363,13 +368,16 @@ int main(int argc, char**argv)
         {
             // Downcasting using shared pointers
             mps_ethercat_sdk::MPSDrive::SharedPtr mpsSlave = std::dynamic_pointer_cast<mps_ethercat_sdk::MPSDrive>(slave);
-            mpsSlave->setDriveStateViaPdo(mps_ethercat_sdk::DriveState::OperationEnabled, true);
-            std::cout << "Putting slave into operational mode: " << mpsSlave->getName() << " : " << mpsSlave->getAddress() << std::endl;
+            std::cout << "Setting slave state via pdo" << std::endl;
+            if(mpsSlave->setDriveStateViaPdo(mps_ethercat_sdk::DriveState::OperationEnabled, true)){
+              std::cout << "Put slave into operational drive state: " << mpsSlave->getName() << " : " << mpsSlave->getAddress() << std::endl;
+            }else{
+              std::cout << "DriveStateChange:" << mpsSlave->getName() << " Addr: " << mpsSlave->getAddress() <<"   Timeout" << std::endl;
+            }
         }
 #endif
 
     }
-
 
     std::cout << "Startup finished" << std::endl;
 
