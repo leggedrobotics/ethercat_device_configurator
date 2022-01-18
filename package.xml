@@ -29,6 +29,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <depend>ethercat_sdk_master</depend>
+  <depend>yaml-cpp</depend>
   <!-->
       Optional dependencies.
       Any single drive sdk or any combination of sdks may be used.

@@ -97,7 +97,7 @@ void worker()
          */
         for(const auto & master: configurator->getMasters() )
         {
-            master->update(ecat_master::UpdateMode::StandaloneEnforceRate); // TODO fix the rate compensation (Elmo reliability problem)!!
+            master->update(ecat_master::UpdateMode::StandaloneEnforceRate);
         }
 
         /*
@@ -171,7 +171,7 @@ void worker()
                 mps_ethercat_sdk::Command command;
                 command.setActuatorVelocityDesired(10);
                 //command.setKp(1.0);
-                command.setKd(0.003);
+                command.setKd(0.001);
                 mpsDrive->stageCommand(command);
                 MELO_DEBUG_STREAM("Staged command");
                 auto reading = mpsDrive->getReading();
