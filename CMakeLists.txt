@@ -77,9 +77,7 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME} stdc++fs yaml-cpp)
 ament_target_dependencies(${PROJECT_NAME} ${PACKAGE_DEPENDENCIES})
 
-ament_export_dependencies(${PACKAGE_DEPENDENCIES})
-ament_export_libraries(${PROJECT_NAME})
-ament_export_include_directories(include)
+
 
 add_executable(
   standalone
@@ -94,7 +92,7 @@ target_link_libraries(
 
 install(
     TARGETS ${PROJECT_NAME} standalone
-    EXPORT ${PROJECT_NAME}Target
+    EXPORT ${PROJECT_NAME}_export
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
     RUNTIME DESTINATION bin
@@ -109,6 +107,11 @@ install( #requries rebuild if changes made in src folder --> enable sym-link ins
     DIRECTORY example_config/
     DESTINATION bin
 )
+
+ament_export_dependencies(${PACKAGE_DEPENDENCIES})
+ament_export_targets(${PROJECT_NAME}_export HAS_LIBRARY_TARGET)
+# ament_export_include_directories(include)
+
 
 ament_package()
 
