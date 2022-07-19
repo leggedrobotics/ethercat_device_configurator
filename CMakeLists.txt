@@ -27,7 +27,8 @@ add_definitions(-DMELO_USE_COUT)
 
 
 find_package(yaml-cpp REQUIRED)
-find_package(ament_cmake REQUIRED)
+find_package(catkin REQUIRED)
+
 find_package(ethercat_sdk_master REQUIRED)
 
 find_package(anydrive QUIET)
@@ -61,22 +62,41 @@ foreach(sdk ${PACKAGE_DEPENDENCIES})
   message("Found EtherCAT device sdk: " ${sdk})
 endforeach()
 
-LIST(APPEND PACKAGE_DEPENDENCIES ament_cmake ethercat_sdk_master yaml-cpp)
+LIST(APPEND PACKAGE_DEPENDENCIES ethercat_sdk_master)
 
+catkin_package(
+        INCLUDE_DIRS
+        include
+        LIBRARIES
+        ${PROJECT_NAME}
+        CATKIN_DEPENDS
+        ${PACKAGE_DEPENDENCIES}
+)
+
+include_directories(
+        include
+        ${anydrive_INCLUDE_DIRS}
+        ${elmo_ethercat_sdk_INCLUDE_DIRS}
+        ${mps_ethercat_sdk_INCLUDE_DIRS}
+        ${maxon_epos_ethercat_sdk_INCLUDE_DIRS}
+        ${rokubimini_rsl_ethercat_INCLUDE_DIRS}
+)
 file(GLOB_RECURSE SRC_FILES ./src/*.c*)
 
 add_library(${PROJECT_NAME}
   ${SRC_FILES}
 )
 
-target_include_directories(${PROJECT_NAME}
-    PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>)
-
-target_link_libraries(${PROJECT_NAME} stdc++fs yaml-cpp)
-ament_target_dependencies(${PROJECT_NAME} ${PACKAGE_DEPENDENCIES})
-
+target_link_libraries(
+        ${PROJECT_NAME}
+        ${anydrive_LIBRARIES}
+        ${elmo_ethercat_sdk_LIBRARIES}
+        ${mps_ethercat_sdk_LIBRARIES}
+        ${maxon_epos_ethercat_sdk_LIBRARIES}
+        ${rokubimini_rsl_ethercat_LIBRARIES}
+        ${YAML_CPP_LIBRARIES}
+        stdc++fs
+)
 
 
 add_executable(
@@ -84,36 +104,36 @@ add_executable(
   src/standalone.cpp
 )
 
+add_dependencies(
+        standalone
+        ${PROJECT_NAME}
+        ${anydrive_EXPORTED_TARGETS}
+        ${rokubimini_rsl_ethercat_EXPORTED_TARGETS}
+        ${elmo_ethercat_sdk_EXPORTED_TARGETS}
+        ${mps_ethercat_sdk_EXPORTED_TARGETS}
+        ${maxon_epos_ethercat_sdk_EXPORTED_TARGETS}
+)
 target_link_libraries(
-    standalone
-    ${PROJECT_NAME}
-    -pthread
+        standalone
+        ${PROJECT_NAME}
+        ${anydrive_LIBRARIES}
+        ${elmo_ethercat_sdk_LIBRARIES}
+        ${mps_ethercat_sdk_LIBRARIES}
+        ${maxon_epos_ethercat_sdk_LIBRARIES}
+        ${rokubimini_rsl_ethercat_LIBRARIES}
+        ${YAML_CPP_LIBRARIES}
+        -pthread
+        stdc++fs
 )
 
-install(
-    TARGETS ${PROJECT_NAME} standalone
-    EXPORT ${PROJECT_NAME}_export
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib
-    RUNTIME DESTINATION bin
-    INCLUDES DESTINATION include
-)
-
-install(
-    DIRECTORY include/
-    DESTINATION include
-)
-install( #requries rebuild if changes made in src folder --> enable sym-link install in colcon.
-    DIRECTORY example_config/
-    DESTINATION bin
-)
-
-ament_export_dependencies(${PACKAGE_DEPENDENCIES})
-ament_export_targets(${PROJECT_NAME}_export HAS_LIBRARY_TARGET)
-# ament_export_include_directories(include)
-
-
-ament_package()
+install(TARGETS ${PROJECT_NAME} standalone
+        ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+        LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+        RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+        )
+install(DIRECTORY include/${PROJECT_NAME}/
+        DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+        )
 
 
 

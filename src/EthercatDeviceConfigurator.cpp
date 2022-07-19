@@ -273,7 +273,7 @@ void EthercatDeviceConfigurator::setup(bool startup)
 #else
             throw std::runtime_error("elmo_ethercat_sdk not availabe.");
 #endif
-
+            break;
         }
           case EthercatSlaveType::MPSDrive:
           {
