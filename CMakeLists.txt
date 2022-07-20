@@ -22,7 +22,7 @@ if(CCACHE_PROGRAM)
 endif()
 
 set(CMAKE_CXX_STANDARD 17)
-add_definitions(-Wall -Werror)
+add_definitions(-Wall -Werror -Wextra)
 add_definitions(-DMELO_USE_COUT)
 
 
@@ -72,7 +72,6 @@ catkin_package(
         CATKIN_DEPENDS
         ${PACKAGE_DEPENDENCIES}
 )
-
 include_directories(
         include
         ${anydrive_INCLUDE_DIRS}
@@ -80,12 +79,20 @@ include_directories(
         ${mps_ethercat_sdk_INCLUDE_DIRS}
         ${maxon_epos_ethercat_sdk_INCLUDE_DIRS}
         ${rokubimini_rsl_ethercat_INCLUDE_DIRS}
+        ${catkin_LIBRARIES}
+
 )
-file(GLOB_RECURSE SRC_FILES ./src/*.c*)
 
 add_library(${PROJECT_NAME}
-  ${SRC_FILES}
+  ./src/EthercatDeviceConfigurator.cpp
 )
+
+
+add_dependencies(${PROJECT_NAME}
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+    )
+
 
 target_link_libraries(
         ${PROJECT_NAME}
@@ -112,7 +119,10 @@ add_dependencies(
         ${elmo_ethercat_sdk_EXPORTED_TARGETS}
         ${mps_ethercat_sdk_EXPORTED_TARGETS}
         ${maxon_epos_ethercat_sdk_EXPORTED_TARGETS}
+        ${${PROJECT_NAME}_EXPORTED_TARGETS}
+        ${catkin_EXPORTED_TARGETS}
 )
+
 target_link_libraries(
         standalone
         ${PROJECT_NAME}
@@ -126,7 +136,7 @@ target_link_libraries(
         stdc++fs
 )
 
-install(TARGETS ${PROJECT_NAME} standalone
+install(TARGETS ${PROJECT_NAME} #standalone
         ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

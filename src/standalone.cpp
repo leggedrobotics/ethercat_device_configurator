@@ -249,6 +249,7 @@ void signal_handler(int sig)
     ** or simliar safety measures at this point using e.g. atomic variables and checking them
     ** in the communication update loop.
      */
+    (void)sig;
     for(const auto & master: configurator->getMasters())
     {
         master->preShutdown();
@@ -279,6 +280,8 @@ void anydriveReadingCb(const std::string& name, const anydrive::ReadingExtended&
 {
     // std::cout << "Reading of anydrive '" << name << "'\n"
     //           << "Joint velocity: " << reading.getState().getJointVelocity() << "\n\n";
+  (void)name;
+  (void)reading;
 }
 #endif
 #ifdef _ROKUBI_FOUND_
