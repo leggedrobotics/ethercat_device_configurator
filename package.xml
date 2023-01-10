@@ -13,29 +13,31 @@ Redistribution and use in source and binary forms, with or without modification,
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <-->
 
-<package format="2">
+  <package format="2">
 
-  <name>ethercat_device_configurator</name>
-  <version>0.6.0</version>
-  <description>Core C++ library to interface one or multiple drives. Contains abstract base classes for the communication interface.</description>
+    <name>ethercat_device_configurator</name>
+    <version>0.6.0</version>
+    <description>Core C++ library to interface one or multiple drives. Contains abstract base classes for the communication interface.</description>
 
-  <license>BSDv3</license>
-  <author email="jungerj@student.ethz.ch">Jonas Junger</author>
-  <author email="nachtigall@mavt.ethz.ch">Lennart Nachtigall</author>
-  <maintainer email="jungerj@student.ethz.ch">Jonas Junger</maintainer>
-  <maintainer email="nachtigall@mavt.ethz.ch">Lennart Nachtigall</maintainer>
-  <url type="website">https://github.com/leggedrobotics/ethercat_device_configurator</url>
-  
-  <buildtool_depend>catkin</buildtool_depend>
+    <license>BSDv3</license>
+    <author email="jungerj@student.ethz.ch">Jonas Junger</author>
+    <author email="nachtigall@mavt.ethz.ch">Lennart Nachtigall</author>
+    <maintainer email="jungerj@student.ethz.ch">Jonas Junger</maintainer>
+    <maintainer email="nachtigall@mavt.ethz.ch">Lennart Nachtigall</maintainer>
+    <url type="website">https://github.com/leggedrobotics/ethercat_device_configurator</url>
 
+    <buildtool_depend>catkin</buildtool_depend>
 
-  <!-->
+    <depend>param_io</depend>
+    <depend>ethercat_sdk_master</depend>
+
+    <!-->
       Optional dependencies.
       Any single drive sdk or any combination of sdks may be used.
-  <-->
-  <depend>anydrive</depend>
-  <depend>elmo_ethercat_sdk</depend>
-  <depend>maxon_epos_ethercat_sdk</depend>
-  <depend>rokubimini_rsl_ethercat</depend>
+    <-->
+      <depend>anydrive_rsl</depend>
+      <depend>elmo_ethercat_sdk</depend>
+      <depend>maxon_epos_ethercat_sdk</depend>
+      <depend>rokubimini_rsl_ethercat</depend>
 
-</package>
+    </package>

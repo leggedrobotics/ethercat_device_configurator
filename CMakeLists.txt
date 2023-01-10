@@ -25,21 +25,28 @@ set(CMAKE_CXX_STANDARD 17)
 add_definitions(-Wall -Werror)
 add_definitions(-DMELO_USE_COUT)
 
+set(PACKAGE_DEPENDENCIES
+  param_io
+  ethercat_sdk_master
+)
 
 find_package(yaml-cpp REQUIRED)
 
-find_package(catkin REQUIRED)
+find_package(catkin REQUIRED
+  COMPONENTS
+    ${CATKIN_PACKAGE_DEPENDENCIES}
+)
 
-find_package(anydrive )
+find_package(anydrive_rsl )
 find_package(elmo_ethercat_sdk )
 find_package(maxon_epos_ethercat_sdk )
 find_package(rokubimini_rsl_ethercat )
 
-if(anydrive_FOUND)
+if(anydrive_rsl_FOUND)
   add_definitions(-D_ANYDRIVE_FOUND_)
   set(PACKAGE_DEPENDENCIES
     ${PACKAGE_DEPENDENCIES}
-    anydrive
+    anydrive_rsl
   )
 endif()
 if(rokubimini_rsl_ethercat_FOUND)
@@ -80,7 +87,9 @@ catkin_package(
 
 include_directories(
   include
-  ${anydrive_INCLUDE_DIRS}
+  SYSTEM
+  ${catkin_INCLUDE_DIRS}
+  ${anydrive_rsl_INCLUDE_DIRS}
   ${elmo_ethercat_sdk_INCLUDE_DIRS}
   ${maxon_epos_ethercat_sdk_INCLUDE_DIRS}
   ${rokubimini_rsl_ethercat_INCLUDE_DIRS}
@@ -98,7 +107,7 @@ add_library(${PROJECT_NAME}
 
 target_link_libraries(
   ${PROJECT_NAME}
-  ${anydrive_LIBRARIES}
+  ${anydrive_rsl_LIBRARIES}
   ${elmo_ethercat_sdk_LIBRARIES}
   ${maxon_epos_ethercat_sdk_LIBRARIES}
   ${rokubimini_rsl_ethercat_LIBRARIES}
@@ -115,7 +124,7 @@ add_executable(
 add_dependencies(
   standalone
   ${PROJECT_NAME}
-  ${anydrive_EXPORTED_TARGETS}
+  ${anydrive_rsl_EXPORTED_TARGETS}
   ${rokubimini_rsl_ethercat_EXPORTED_TARGETS}
   ${elmo_ethercat_sdk_EXPORTED_TARGETS}
   ${maxon_epos_ethercat_sdk_EXPORTED_TARGETS}
@@ -123,7 +132,7 @@ add_dependencies(
 target_link_libraries(
   standalone
   ${PROJECT_NAME}
-  ${anydrive_LIBRARIES}
+  ${anydrive_rsl_LIBRARIES}
   ${elmo_ethercat_sdk_LIBRARIES}
   ${maxon_epos_ethercat_sdk_LIBRARIES}
   ${rokubimini_rsl_ethercat_LIBRARIES}
