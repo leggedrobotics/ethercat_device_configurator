@@ -155,6 +155,12 @@ void EthercatDeviceConfigurator::parseParameter(XmlRpc::XmlRpcValue& params) {
         entry.config_params = param_io::getMember<XmlRpc::XmlRpcValue>(deviceParam.second, "configuration");
       }
 
+      if (entry.type == EthercatSlaveType::Rokubi) {
+        if (deviceParam.second.hasMember("configuration_file")) {
+          entry.config_file_path = param_io::getMember<std::string>(deviceParam.second, "configuration_file");
+        }
+      }
+
       if (deviceParam.second.hasMember("communication")) {
         XmlRpc::XmlRpcValue communicationParams = param_io::getMember<XmlRpc::XmlRpcValue>(deviceParam.second, "communication");
         if (communicationParams.hasMember("ethercat_address")) {
@@ -350,8 +356,15 @@ void EthercatDeviceConfigurator::setup(bool startup) {
         }
 
         // Handle configuration file path
-        std::string configuration_file_path = handleFilePath(entry.config_file_path, m_setup_file_path);
-        slave = rokubimini::ethercat::RokubiminiEthercat::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address, pdo);
+        if (entry.has_config_file) {
+          // handleFilePath takes care of creating an absolute path from the path in the setup.yaml
+          std::string configuration_file_path = handleFilePath(entry.config_file_path, m_setup_file_path);
+          slave =
+              rokubimini::ethercat::RokubiminiEthercat::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address, pdo);
+        } else {
+          slave = rokubimini::ethercat::RokubiminiEthercat::deviceFromRosParameterServer(entry.config_params, entry.name,
+                                                                                         entry.ethercat_address, pdo);
+        }
 #else
         throw std::runtime_error("rokubimini_ethercat_sdk not available");
 #endif
