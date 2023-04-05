@@ -309,18 +309,18 @@ void EthercatDeviceConfigurator::setup(bool startup) {
       } break;
       case EthercatSlaveType::Anydrive: {
 #ifdef _ANYDRIVE_FOUND_
-        anydrive::PdoTypeEnum pdo = anydrive::PdoTypeEnum::NA;
+        anydrive_rsl::PdoTypeEnum pdo = anydrive_rsl::PdoTypeEnum::NA;
 
         if (entry.ethercat_pdo_type == "A") {
-          pdo = anydrive::PdoTypeEnum::A;
+          pdo = anydrive_rsl::PdoTypeEnum::A;
         } else if (entry.ethercat_pdo_type == "B") {
-          pdo = anydrive::PdoTypeEnum::B;
+          pdo = anydrive_rsl::PdoTypeEnum::B;
         } else if (entry.ethercat_pdo_type == "C") {
-          pdo = anydrive::PdoTypeEnum::C;
+          pdo = anydrive_rsl::PdoTypeEnum::C;
         } else if (entry.ethercat_pdo_type == "D") {
-          pdo = anydrive::PdoTypeEnum::D;
+          pdo = anydrive_rsl::PdoTypeEnum::D;
         } else if (entry.ethercat_pdo_type == "E") {
-          pdo = anydrive::PdoTypeEnum::E;
+          pdo = anydrive_rsl::PdoTypeEnum::E;
         } else {
           throw std::runtime_error("[EthercatDeviceConfigurator] PDO unknown: " + entry.ethercat_pdo_type);
         }
@@ -328,10 +328,10 @@ void EthercatDeviceConfigurator::setup(bool startup) {
         if (entry.has_config_file) {
           // handleFilePath takes care of creating an absolute path from the path in the setup.yaml
           std::string configuration_file_path = handleFilePath(entry.config_file_path, m_setup_file_path);
-          slave = anydrive::AnydriveEthercatSlave::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address, pdo);
+          slave = anydrive_rsl::AnydriveEthercatSlave::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address, pdo);
         } else {
-          slave =
-              anydrive::AnydriveEthercatSlave::deviceFromRosParameterServer(entry.config_params, entry.name, entry.ethercat_address, pdo);
+          slave = anydrive_rsl::AnydriveEthercatSlave::deviceFromRosParameterServer(entry.config_params, entry.name, entry.ethercat_address,
+                                                                                    pdo);
         }
 #else
         throw std::runtime_error("anydrive_ethercat_sdk not available");

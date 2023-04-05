@@ -106,11 +106,12 @@ void worker() {
       // Anydrive
       if (configurator->getInfoForSlave(slave).type == EthercatDeviceConfigurator::EthercatSlaveType::Anydrive) {
 #ifdef _ANYDRIVE_FOUND_
-        anydrive::AnydriveEthercatSlave::SharedPtr any_slave_ptr = std::dynamic_pointer_cast<anydrive::AnydriveEthercatSlave>(slave);
+        anydrive_rsl::AnydriveEthercatSlave::SharedPtr any_slave_ptr =
+            std::dynamic_pointer_cast<anydrive_rsl::AnydriveEthercatSlave>(slave);
 
-        if (any_slave_ptr->getActiveStateEnum() == anydrive::fsm::StateEnum::ControlOp) {
-          anydrive::Command cmd;
-          cmd.setModeEnum(anydrive::mode::ModeEnum::MotorVelocity);
+        if (any_slave_ptr->getActiveStateEnum() == anydrive_rsl::fsm::StateEnum::ControlOp) {
+          anydrive_rsl::Command cmd;
+          cmd.setModeEnum(anydrive_rsl::mode::ModeEnum::MotorVelocity);
           cmd.setMotorVelocity(10);
 
           any_slave_ptr->setCommand(cmd);
@@ -231,7 +232,7 @@ void signal_handler(int sig) {
 
 #ifdef _ANYDRIVE_FOUND_
 // Some dummy callbacks
-void anydriveReadingCb(const std::string& name, const anydrive::ReadingExtended& reading) {
+void anydriveReadingCb(const std::string& name, const anydrive_rsl::ReadingExtended& reading) {
   // std::cout << "Reading of anydrive '" << name << "'\n"
   //           << "Joint velocity: " << reading.getState().getJointVelocity() << "\n\n";
 }
@@ -265,7 +266,7 @@ int main(int argc, char** argv) {
   ** of a ceratin type.
   */
 #ifdef _ANYDRIVE_FOUND_
-  for (const auto& device : configurator->getSlavesOfType<anydrive::AnydriveEthercatSlave>()) {
+  for (const auto& device : configurator->getSlavesOfType<anydrive_rsl::AnydriveEthercatSlave>()) {
     device->addReadingCb(anydriveReadingCb);
   }
 #endif
@@ -302,8 +303,8 @@ int main(int argc, char** argv) {
 #ifdef _ANYDRIVE_FOUND_
     if (configurator->getInfoForSlave(slave).type == EthercatDeviceConfigurator::EthercatSlaveType::Anydrive) {
       // Downcasting using shared pointers
-      anydrive::AnydriveEthercatSlave::SharedPtr any_slave_ptr = std::dynamic_pointer_cast<anydrive::AnydriveEthercatSlave>(slave);
-      any_slave_ptr->setFSMGoalState(anydrive::fsm::StateEnum::ControlOp, false, 0, 0);
+      anydrive_rsl::AnydriveEthercatSlave::SharedPtr any_slave_ptr = std::dynamic_pointer_cast<anydrive_rsl::AnydriveEthercatSlave>(slave);
+      any_slave_ptr->setFSMGoalState(anydrive_rsl::fsm::StateEnum::ControlOp, false, 0, 0);
       std::cout << "Putting slave into operational mode: " << any_slave_ptr->getName() << " : " << any_slave_ptr->getAddress() << std::endl;
     }
 #endif

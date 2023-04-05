@@ -7,7 +7,7 @@
 # 1. Permanently change the configuration which is stored on its local flash
 #    memory, e.g. using the ANYdrive Studio software.
 # 2. Temporarily change the configuration using this configuration file or the
-#    anydrive::configuration::Configuration class which contain the same
+#    anydrive_rsl::configuration::Configuration class which contain the same
 #    information. This information is sent in the Configure state and lost
 #    whenever the ANYdrive is restarted. 
 
