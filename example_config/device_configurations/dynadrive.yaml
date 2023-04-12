@@ -52,63 +52,6 @@ fan:
   lower_temperature: 40.0
   upper_temperature: 50.0
 
-modes:
-  - name: "Current"
-    gains:
-      p: 0.7
-      i: 0.25
-      d: 0.0
-
-  # freeze controller gains
-  - name: "MotorVelocity"
-    gains:
-      p: 120
-      i: 1.0
-      d: 0.0
-
-  - name: "GearPosition"
-    gains:
-      p: 0.0
-      i: 0.0
-      d: 0.0
-
-  - name: "GearVelocity"
-    gains:
-      p: 0.0
-      i: 0.0
-      d: 0.0
-
-  - name: JointPosition
-    gains:
-      p: 45.0
-      i: 0.00100
-      d: 0.05000
-
-  - name: JointVelocity
-    gains:
-      p: 0.4000
-      i: 0.0030
-      d: 0.00100
-
-  - name: JointTorque
-    gains:
-      p: 0.1
-      i: 0.0
-      d: 0.0
-
-  - name: JointPositionVelocity
-    gains:
-      p: 0.1
-      i: 0.00000
-      d: 0.00000
-
-  - name: JointPositionVelocityTorque
-    gains:
-      p: 60.0
-      i: 0.05
-      d: 5.0
-
 goal_states:
   startup: "ControlOp"
   shutdown: "MotorOp"
-

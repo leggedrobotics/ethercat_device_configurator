@@ -55,19 +55,32 @@ bool abrt = false;
 bool abrtMain = false;
 
 EthercatDeviceConfigurator::SharedPtr configurator;
+std::unique_ptr<std::thread> worker_thread;
 
 unsigned int counter = 0;
+std::string config_file_path = "";
 
-void worker(int masterIndex)
+void worker()
 {
-    // bool rtSuccess = true;
-    // for(const auto & master: configurator->getMasters())
-    // {
-    //     rtSuccess &= master->setRealtimePriority(99);
-    // }
-    std::cout << "updating master with index: " << masterIndex << std::endl;
     
-    bool rtSuccess = configurator->getMasters().at(masterIndex)->setRealtimePriority(99);
+    std::string setup_file_name = "setup_" + std::to_string(0) + ".yaml";
+    std::string setup_file = config_file_path + setup_file_name;
+    configurator = std::make_shared<EthercatDeviceConfigurator>(setup_file);
+
+    for(const auto & master: configurator->getMasters()) {
+        if(!master->startup())
+        {
+            std::cerr << "Startup not successful." << std::endl;
+            abrtMain = true;
+            return;
+        }
+    }
+
+    bool rtSuccess = true;
+    for(const auto & master: configurator->getMasters())
+    {
+        rtSuccess &= master->setRealtimePriority(99);
+    }
     std::cout << "Setting RT Priority: " << (rtSuccess? "successful." : "not successful. Check user privileges.") << std::endl;
 
     /*
@@ -84,14 +97,29 @@ void worker(int masterIndex)
         ** The StandaloneEnforceRate update mode is used.
         ** This means that average update rate will be close to the target rate (if possible).
          */
-        configurator->getMasters().at(masterIndex)->update(ecat_master::UpdateMode::StandaloneEnforceStep);
-        // for(const auto & master: configurator->getMasters() )
-        // {
-        //     master->update(ecat_master::UpdateMode::StandaloneEnforceStep); // TODO fix the rate compensation (Elmo reliability problem)!!
-        // }
+        for(const auto & master: configurator->getMasters() ) {
+            master->update(ecat_master::UpdateMode::StandaloneEnforceStep); // TODO fix the rate compensation (Elmo reliability problem)!!
+        }
+
+        for(const auto & slave:configurator->getSlaves())
+        {
+            // Anydrive
+            if(configurator->getInfoForSlave(slave).type == EthercatDeviceConfigurator::EthercatSlaveType::Anydrive)
+            {
+                anydrive::AnydriveEthercatSlave::SharedPtr any_slave_ptr = std::dynamic_pointer_cast<anydrive::AnydriveEthercatSlave>(slave);
+
+                if(any_slave_ptr->getActiveStateEnum() == anydrive::fsm::StateEnum::ControlOp)
+                {
+                    anydrive::Command cmd;
+                    cmd.setModeEnum(anydrive::mode::ModeEnum::MotorVelocity);
+                    cmd.setMotorVelocity(10);
+
+                    any_slave_ptr->setCommand(cmd);
+                }
+            }
+        }
     }
 }
-
 /*
 ** Handle the interrupt signal.
 ** This is the shutdown routine.
@@ -99,16 +127,6 @@ void worker(int masterIndex)
  */
 void signal_handler(int sig)
 {
-    /*
-    ** Pre shutdown procedure.
-    ** The devices execute procedures (e.g. state changes) that are necessary for a
-    ** proper shutdown and that must be done with PDO communication.
-    ** The communication update loop (i.e. PDO loop) continues to run!
-    ** You might thus want to implement some logic that stages zero torque / velocity commands
-    ** or simliar safety measures at this point using e.g. atomic variables and checking them
-    ** in the communication update loop.
-     */
-
     abrtMain = true;
 
     // Exit this executable
@@ -121,13 +139,6 @@ void anydriveReadingCb(const std::string& name, const anydrive::ReadingExtended&
 {
     // std::cout << "Reading of anydrive '" << name << "'\n"
     //           << "Joint velocity: " << reading.getState().getJointVelocity() << "\n\n";
-}
-#endif
-#ifdef _ROKUBI_FOUND_
-void rokubiReadingCb(const std::string& name, const rokubimini::Reading& reading)
-{
-    // std::cout << "Reading of rokubi '" << name << "'\n"
-    //           << "Force X: " << reading.getForceX() << "\n\n";
 }
 #endif
 
@@ -147,92 +158,39 @@ int main(int argc, char**argv)
         std::cerr << "pass path to 'setup.yaml' as command line argument" << std::endl;
         return EXIT_FAILURE;
     }
-    // a new EthercatDeviceConfigurator object (path to setup.yaml as constructor argument)
-    configurator = std::make_shared<EthercatDeviceConfigurator>(argv[1]);
 
-    /*
-    ** Add callbacks to the devices that support them.
-    ** If you don't want to use callbacks this part can simply be left out.
-    ** configurator->getSlavesOfType is another way of extracting only the evices
-    ** of a ceratin type.
-     */
-#ifdef _ANYDRIVE_FOUND_
-    for(const auto& device : configurator->getSlavesOfType<anydrive::AnydriveEthercatSlave>())
-    {
-        device->addReadingCb(anydriveReadingCb);
-    }
-#endif
-#if _ROKUBI_FOUND_
-    for(const auto& device : configurator->getSlavesOfType<rokubimini::ethercat::RokubiminiEthercat>()){
-        device->addReadingCb(rokubiReadingCb);
-    }
-#endif
-
-    /*
-    ** Start all masters.
-    ** There is exactly one bus per master which is also started.
-    ** All online (i.e. SDO) configuration is done during this call.
-    ** The EtherCAT interface is active afterwards, all drives are in Operational
-    ** EtherCAT state and PDO communication may begin.
-     */
-    for(auto & master: configurator->getMasters())
-    {
-        if(!master->startup())
-        {
-            std::cerr << "Startup not successful." << std::endl;
-            return EXIT_FAILURE;
-        }
-    }
+    config_file_path = argv[1];
 
     // worker_thread = std::make_unique<std::thread>(&worker);
     // Start the PDO loop in a new thread.
-    std::vector<std::thread> threads;
-    for (unsigned int i = 0; i < configurator->getMasters().size(); i++) {
-        std::thread t(worker,i);
-        t.detach();
-        // threads.push_back(t);
-    }
+    worker_thread = std::make_unique<std::thread>(&worker);
 
     /*
     ** Wait for a few PDO cycles to pass.
     ** Set anydrives into to ControlOp state (internal state machine, not EtherCAT states)
      */
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    for(auto & slave: configurator->getSlaves())
-    {
-        std::cout << " " << slave->getName() << ": " << slave->getAddress() << std::endl;
-#ifdef _ANYDRIVE_FOUND_
-        if(configurator->getInfoForSlave(slave).type == EthercatDeviceConfigurator::EthercatSlaveType::Anydrive)
-        {
-            // Downcasting using shared pointers
-            anydrive::AnydriveEthercatSlave::SharedPtr any_slave_ptr = std::dynamic_pointer_cast<anydrive::AnydriveEthercatSlave>(slave);
-            any_slave_ptr->setFSMGoalState(anydrive::fsm::StateEnum::ControlOp, false,0,0);
-            std::cout << "Putting slave into operational mode: " << any_slave_ptr->getName() << " : " << any_slave_ptr->getAddress() << std::endl;
-        }
-#endif
-    }
 
     std::cout << "Startup finished" << std::endl;
 
     while (true) {
         if (abrtMain) {
-            for(const auto & master: configurator->getMasters())
-            {
-                master->preShutdown();
-            }
+                for(const auto & master: configurator->getMasters())
+                {
+                    master->preShutdown();
+                }
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             abrt = true;
-            for ( unsigned int i = 0; i < threads.size(); i++) {
-                threads.at(i).join();
-            }
-            // worker_thread->join();
-            for(const auto & master: configurator->getMasters())
-            {
-                master->shutdown();
-            }
+            // for ( unsigned int i = 0; i < threads.size(); i++) {
+            //     threads.at(i).join();
+            // }
+            worker_thread->join();
+                for(const auto & master: configurator->getMasters())
+                {
+                    master->shutdown();
+                }
             break;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
 
     std::cout << "Exit" << std::endl;
