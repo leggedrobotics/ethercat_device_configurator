@@ -91,7 +91,7 @@ void worker()
          */
         for(const auto & master: configurator->getMasters() )
         {
-            master->update(ecat_master::UpdateMode::StandaloneEnforceRate); // TODO fix the rate compensation (Elmo reliability problem)!!
+            master->update(ecat_master::UpdateMode::StandaloneEnforceStep); // TODO fix the rate compensation (Elmo reliability problem)!!
         }
 
         /*
@@ -317,7 +317,7 @@ int main(int argc, char**argv)
     ** Wait for a few PDO cycles to pass.
     ** Set anydrives into to ControlOp state (internal state machine, not EtherCAT states)
      */
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
     for(auto & slave: configurator->getSlaves())
     {
         std::cout << " " << slave->getName() << ": " << slave->getAddress() << std::endl;

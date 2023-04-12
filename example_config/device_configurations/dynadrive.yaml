@@ -1,0 +1,113 @@
+max_command_age: .inf
+
+auto_stage_last_command: true
+
+set_reading_to_nan_on_disconnect: true
+
+error_state_behavior: 0
+
+max_current: 25.0
+
+max_freeze_current: 10.0
+
+max_motor_velocity: 40
+
+max_joint_torque: 45.0
+
+current_integrator_saturation: 15.0
+
+joint_torque_integrator_saturation: 10.0
+
+direction: -1
+
+dgainFilterCutoffFrequency: 50
+
+joint_position_limits:
+  sdk:
+    min: 0.0
+    max: 0.0
+  soft:
+    min: 0.0
+    max: 0.0
+  hard:
+    min: 0.0
+    max: 0.0
+
+joint_position_configurations:
+  - name: "zero"
+    value: 0.0
+  - name: "default"
+    value: 0.2
+  - name: "rest"
+    value: 0.2
+
+imu:
+  enable: true
+  accelerometer_range: 1
+  gyroscope_range: 1
+
+fan:
+  mode: 1
+  intensity: 10
+  lower_temperature: 40.0
+  upper_temperature: 50.0
+
+modes:
+  - name: "Current"
+    gains:
+      p: 0.7
+      i: 0.25
+      d: 0.0
+
+  # freeze controller gains
+  - name: "MotorVelocity"
+    gains:
+      p: 120
+      i: 1.0
+      d: 0.0
+
+  - name: "GearPosition"
+    gains:
+      p: 0.0
+      i: 0.0
+      d: 0.0
+
+  - name: "GearVelocity"
+    gains:
+      p: 0.0
+      i: 0.0
+      d: 0.0
+
+  - name: JointPosition
+    gains:
+      p: 45.0
+      i: 0.00100
+      d: 0.05000
+
+  - name: JointVelocity
+    gains:
+      p: 0.4000
+      i: 0.0030
+      d: 0.00100
+
+  - name: JointTorque
+    gains:
+      p: 0.1
+      i: 0.0
+      d: 0.0
+
+  - name: JointPositionVelocity
+    gains:
+      p: 0.1
+      i: 0.00000
+      d: 0.00000
+
+  - name: JointPositionVelocityTorque
+    gains:
+      p: 60.0
+      i: 0.05
+      d: 5.0
+
+goal_states:
+  startup: "Configure"
+  shutdown: "MotorOp"
