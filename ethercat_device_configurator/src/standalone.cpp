@@ -1,23 +1,30 @@
 /*
  ** Copyright 2021 Robotic Systems Lab - ETH Zurich:
  ** Lennart Nachtigall, Jonas Junger
- ** Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions
- *are met:
+ ** Redistribution and use in source and binary forms, with or without
+ *modification, are permitted provided that the following conditions are met:
  **
- ** 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ ** 1. Redistributions of source code must retain the above copyright notice,
+ *this list of conditions and the following disclaimer.
  **
- ** 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the
- *documentation and/or other materials provided with the distribution.
+ ** 2. Redistributions in binary form must reproduce the above copyright notice,
+ *this list of conditions and the following disclaimer in the documentation
+ *and/or other materials provided with the distribution.
  **
- ** 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from
- *this software without specific prior written permission.
+ ** 3. Neither the name of the copyright holder nor the names of its
+ *contributors may be used to endorse or promote products derived from this
+ *software without specific prior written permission.
  **
- ** THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
- *ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
- *USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ ** THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ *DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ *FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ *DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ *SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ *CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ *OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ *OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /*
@@ -31,7 +38,8 @@
 **   be sourced and the linker cannot find the necessary libraries. Use the
 **   following command to start this executable:
 **   ┌────
-**   │ sudo bash -c 'source /absolute/path/to/your/catkin_ws/devel/setup.bash; path/to/executable path/to/setup.yaml'
+**   │ sudo bash -c 'source /absolute/path/to/your/catkin_ws/devel/setup.bash;
+*path/to/executable path/to/setup.yaml'
 **   └────
 **
 **
@@ -57,19 +65,21 @@
 #endif
 #include <csignal>
 #include <thread>
-std::unique_ptr<std::thread> worker_thread;
 bool abrt = false;
-
+bool mainAbrt = false;
 EthercatDeviceConfigurator::SharedPtr configurator;
 
 unsigned int counter = 0;
 
 void worker() {
   bool rtSuccess = true;
-  for (const auto& master : configurator->getMasters()) {
+  for (const auto &master : configurator->getMasters()) {
     rtSuccess &= master->setRealtimePriority(99);
   }
-  std::cout << "Setting RT Priority: " << (rtSuccess ? "successful." : "not successful. Check user privileges.") << std::endl;
+  std::cout << "Setting RT Priority: "
+            << (rtSuccess ? "successful."
+                          : "not successful. Check user privileges.")
+            << std::endl;
 
   // Flag to set the drive state for the elmos on first startup
 #ifdef _ELMO_FOUND_
@@ -89,12 +99,17 @@ void worker() {
   while (!abrt) {
     /*
     ** Update each master.
-    ** This sends tha last staged commands and reads the latest readings over EtherCAT.
+    ** This sends tha last staged commands and reads the latest readings over
+    *EtherCAT.
     ** The StandaloneEnforceRate update mode is used.
-    ** This means that average update rate will be close to the target rate (if possible).
+    ** This means that average update rate will be close to the target rate (if
+    *possible).
     */
-    for (const auto& master : configurator->getMasters()) {
-      master->update(ecat_master::UpdateMode::StandaloneEnforceRate);  // TODO fix the rate compensation (Elmo reliability problem)!!
+    for (const auto &master : configurator->getMasters()) {
+      master->update(
+          ecat_master::UpdateMode::
+              StandaloneEnforceRate); // TODO fix the rate compensation (Elmo
+                                      // reliability problem)!!
     }
 
     /*
@@ -102,14 +117,17 @@ void worker() {
     ** Your lowlevel control input / measurement logic goes here.
     ** Different logic can be implemented for each device.
     */
-    for (const auto& slave : configurator->getSlaves()) {
+    for (const auto &slave : configurator->getSlaves()) {
       // Anydrive
-      if (configurator->getInfoForSlave(slave).type == EthercatDeviceConfigurator::EthercatSlaveType::Anydrive) {
+      if (configurator->getInfoForSlave(slave).type ==
+          EthercatDeviceConfigurator::EthercatSlaveType::Anydrive) {
 #ifdef _ANYDRIVE_FOUND_
         anydrive_rsl::AnydriveEthercatSlave::SharedPtr any_slave_ptr =
-            std::dynamic_pointer_cast<anydrive_rsl::AnydriveEthercatSlave>(slave);
+            std::dynamic_pointer_cast<anydrive_rsl::AnydriveEthercatSlave>(
+                slave);
 
-        if (any_slave_ptr->getActiveStateEnum() == anydrive_rsl::fsm::StateEnum::ControlOp) {
+        if (any_slave_ptr->getActiveStateEnum() ==
+            anydrive_rsl::fsm::StateEnum::ControlOp) {
           anydrive_rsl::Command cmd;
           cmd.setModeEnum(anydrive_rsl::mode::ModeEnum::MotorVelocity);
           cmd.setMotorVelocity(10);
@@ -120,65 +138,83 @@ void worker() {
 
       }
       // Rokubi
-      else if (configurator->getInfoForSlave(slave).type == EthercatDeviceConfigurator::EthercatSlaveType::Rokubi) {
+      else if (configurator->getInfoForSlave(slave).type ==
+               EthercatDeviceConfigurator::EthercatSlaveType::Rokubi) {
 #ifdef _ROKUBI_FOUND_
-        std::shared_ptr<rokubimini::ethercat::RokubiminiEthercat> rokubi_slave_ptr =
-            std::dynamic_pointer_cast<rokubimini::ethercat::RokubiminiEthercat>(slave);
+        std::shared_ptr<rokubimini::ethercat::RokubiminiEthercat>
+            rokubi_slave_ptr = std::dynamic_pointer_cast<
+                rokubimini::ethercat::RokubiminiEthercat>(slave);
         // Do things with the Rokubi sensors here
 #endif
       }
 
       // Elmo
-      else if (configurator->getInfoForSlave(slave).type == EthercatDeviceConfigurator::EthercatSlaveType::Elmo) {
+      else if (configurator->getInfoForSlave(slave).type ==
+               EthercatDeviceConfigurator::EthercatSlaveType::Elmo) {
 #ifdef _ELMO_FOUND_
-        std::shared_ptr<elmo::Elmo> elmo_slave_ptr = std::dynamic_pointer_cast<elmo::Elmo>(slave);
+        std::shared_ptr<elmo::Elmo> elmo_slave_ptr =
+            std::dynamic_pointer_cast<elmo::Elmo>(slave);
         if (!elmoEnabledAfterStartup)
           // Set elmos to operation enabled state, do not block the call!
-          elmo_slave_ptr->setDriveStateViaPdo(elmo::DriveState::OperationEnabled, false);
+          elmo_slave_ptr->setDriveStateViaPdo(
+              elmo::DriveState::OperationEnabled, false);
         // set commands if we can
         if (elmo_slave_ptr->lastPdoStateChangeSuccessful() &&
-            elmo_slave_ptr->getReading().getDriveState() == elmo::DriveState::OperationEnabled) {
+            elmo_slave_ptr->getReading().getDriveState() ==
+                elmo::DriveState::OperationEnabled) {
           elmo::Command command;
           command.setTargetVelocity(50);
           elmo_slave_ptr->stageCommand(command);
         } else {
-          MELO_WARN_STREAM("Elmo '" << elmo_slave_ptr->getName() << "': " << elmo_slave_ptr->getReading().getDriveState());
-          // elmo_slave_ptr->setDriveStateViaPdo(elmo::DriveState::OperationEnabled, false);
+          MELO_WARN_STREAM("Elmo '"
+                           << elmo_slave_ptr->getName() << "': "
+                           << elmo_slave_ptr->getReading().getDriveState());
+          // elmo_slave_ptr->setDriveStateViaPdo(elmo::DriveState::OperationEnabled,
+          // false);
         }
         auto reading = elmo_slave_ptr->getReading();
         // std::cout << "Elmo '" << elmo_slave_ptr->getName() << "': "
-        //                 << "velocity: " << reading.getActualVelocity() << " rad/s\n";
+        //                 << "velocity: " << reading.getActualVelocity() << "
+        //                 rad/s\n";
 #endif
       }
       // Maxon
-      else if (configurator->getInfoForSlave(slave).type == EthercatDeviceConfigurator::EthercatSlaveType::Maxon) {
+      else if (configurator->getInfoForSlave(slave).type ==
+               EthercatDeviceConfigurator::EthercatSlaveType::Maxon) {
 #ifdef _MAXON_FOUND_
 
         // Keep constant update rate
         // auto start_time = std::chrono::steady_clock::now();
 
-        std::shared_ptr<maxon::Maxon> maxon_slave_ptr = std::dynamic_pointer_cast<maxon::Maxon>(slave);
+        std::shared_ptr<maxon::Maxon> maxon_slave_ptr =
+            std::dynamic_pointer_cast<maxon::Maxon>(slave);
 
         if (!maxonEnabledAfterStartup) {
           // Set maxons to operation enabled state, do not block the call!
-          maxon_slave_ptr->setDriveStateViaPdo(maxon::DriveState::OperationEnabled, false);
+          maxon_slave_ptr->setDriveStateViaPdo(
+              maxon::DriveState::OperationEnabled, false);
         }
 
         // set commands if we can
         if (maxon_slave_ptr->lastPdoStateChangeSuccessful() &&
-            maxon_slave_ptr->getReading().getDriveState() == maxon::DriveState::OperationEnabled) {
+            maxon_slave_ptr->getReading().getDriveState() ==
+                maxon::DriveState::OperationEnabled) {
           maxon::Command command;
-          command.setModeOfOperation(maxon::ModeOfOperationEnum::CyclicSynchronousTorqueMode);
+          command.setModeOfOperation(
+              maxon::ModeOfOperationEnum::CyclicSynchronousTorqueMode);
           auto reading = maxon_slave_ptr->getReading();
           command.setTargetPosition(reading.getActualPosition() + 10);
           command.setTargetTorque(-0.5);
           maxon_slave_ptr->stageCommand(command);
         } else {
-          MELO_WARN_STREAM("Maxon '" << maxon_slave_ptr->getName() << "': " << maxon_slave_ptr->getReading().getDriveState());
+          MELO_WARN_STREAM("Maxon '"
+                           << maxon_slave_ptr->getName() << "': "
+                           << maxon_slave_ptr->getReading().getDriveState());
         }
 
         // Constant update rate
-        // std::this_thread::sleep_until(start_time + std::chrono::milliseconds(1));
+        // std::this_thread::sleep_until(start_time +
+        // std::chrono::milliseconds(1));
 
 #endif
       }
@@ -196,49 +232,40 @@ void worker() {
 /*
 ** Handle the interrupt signal.
 ** This is the shutdown routine.
-** Note: This logic is executed in a thread separated from the communication update!
+** Note: This logic is executed in a thread separated from the communication
+*update!
 */
 void signal_handler(int sig) {
   /*
   ** Pre shutdown procedure.
-  ** The devices execute procedures (e.g. state changes) that are necessary for a
+  ** The devices execute procedures (e.g. state changes) that are necessary for
+  *a
   ** proper shutdown and that must be done with PDO communication.
   ** The communication update loop (i.e. PDO loop) continues to run!
-  ** You might thus want to implement some logic that stages zero torque / velocity commands
-  ** or simliar safety measures at this point using e.g. atomic variables and checking them
+  ** You might thus want to implement some logic that stages zero torque /
+  *velocity commands
+  ** or simliar safety measures at this point using e.g. atomic variables and
+  *checking them
   ** in the communication update loop.
   */
-  for (const auto& master : configurator->getMasters()) {
-    master->preShutdown();
-  }
-
-  // stop the PDO communication at the next update of the communication loop
-  abrt = true;
-  worker_thread->join();
-
-  /*
-  ** Completely halt the EtherCAT communication.
-  ** No online communication is possible afterwards, including SDOs.
-  */
-  for (const auto& master : configurator->getMasters()) {
-    master->shutdown();
-  }
+  mainAbrt = true;
 
   // Exit this executable
   std::cout << "Shutdown" << std::endl;
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));
-  exit(0);
 }
 
 #ifdef _ANYDRIVE_FOUND_
 // Some dummy callbacks
-void anydriveReadingCb(const std::string& name, const anydrive_rsl::ReadingExtended& reading) {
+void anydriveReadingCb(const std::string &name,
+                       const anydrive_rsl::ReadingExtended &reading) {
   // std::cout << "Reading of anydrive '" << name << "'\n"
-  //           << "Joint velocity: " << reading.getState().getJointVelocity() << "\n\n";
+  //           << "Joint velocity: " << reading.getState().getJointVelocity() <<
+  //           "\n\n";
 }
 #endif
 #ifdef _ROKUBI_FOUND_
-void rokubiReadingCb(const std::string& name, const rokubimini::Reading& reading) {
+void rokubiReadingCb(const std::string &name,
+                     const rokubimini::Reading &reading) {
   // std::cout << "Reading of rokubi '" << name << "'\n"
   //           << "Force X: " << reading.getForceX() << "\n\n";
 }
@@ -248,17 +275,19 @@ void rokubiReadingCb(const std::string& name, const rokubimini::Reading& reading
 ** Program entry.
 ** Pass the path to the setup.yaml file as first command line argument.
 */
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
   // Set the abrt_ flag upon receiving an interrupt signal (e.g. Ctrl-c)
   std::signal(SIGINT, signal_handler);
 
   if (argc < 2) {
-    std::cerr << "pass path to 'setup.yaml' as command line argument" << std::endl;
+    std::cerr << "pass path to 'setup.yaml' as command line argument"
+              << std::endl;
     return EXIT_FAILURE;
   }
-  // a new EthercatDeviceConfigurator object (path to setup.yaml as constructor argument)
-  configurator = std::make_shared<EthercatDeviceConfigurator>(argv[1]);
-
+  // a new EthercatDeviceConfigurator object (path to setup.yaml as constructor
+  // argument)
+  configurator = std::make_shared<EthercatDeviceConfigurator>();
+  configurator->initializeFromFile(argv[1]);
   /*
   ** Add callbacks to the devices that support them.
   ** If you don't want to use callbacks this part can simply be left out.
@@ -266,12 +295,15 @@ int main(int argc, char** argv) {
   ** of a ceratin type.
   */
 #ifdef _ANYDRIVE_FOUND_
-  for (const auto& device : configurator->getSlavesOfType<anydrive_rsl::AnydriveEthercatSlave>()) {
+  for (const auto &device :
+       configurator->getSlavesOfType<anydrive_rsl::AnydriveEthercatSlave>()) {
     device->addReadingCb(anydriveReadingCb);
   }
 #endif
 #if _ROKUBI_FOUND_
-  for (const auto& device : configurator->getSlavesOfType<rokubimini::ethercat::RokubiminiEthercat>()) {
+  for (const auto &device :
+       configurator
+           ->getSlavesOfType<rokubimini::ethercat::RokubiminiEthercat>()) {
     device->addReadingCb(rokubiReadingCb);
   }
 #endif
@@ -283,7 +315,7 @@ int main(int argc, char** argv) {
   ** The EtherCAT interface is active afterwards, all drives are in Operational
   ** EtherCAT state and PDO communication may begin.
   */
-  for (auto& master : configurator->getMasters()) {
+  for (auto &master : configurator->getMasters()) {
     if (!master->startup()) {
       std::cerr << "Startup not successful." << std::endl;
       return EXIT_FAILURE;
@@ -291,27 +323,50 @@ int main(int argc, char** argv) {
   }
 
   // Start the PDO loop in a new thread.
-  worker_thread = std::make_unique<std::thread>(&worker);
+  std::thread worker_thread(worker);
+  worker_thread.detach();
 
   /*
   ** Wait for a few PDO cycles to pass.
-  ** Set anydrives into to ControlOp state (internal state machine, not EtherCAT states)
+  ** Set anydrives into to ControlOp state (internal state machine, not EtherCAT
+  *states)
   */
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
-  for (auto& slave : configurator->getSlaves()) {
-    std::cout << " " << slave->getName() << ": " << slave->getAddress() << std::endl;
+  for (auto &slave : configurator->getSlaves()) {
+    std::cout << " " << slave->getName() << ": " << slave->getAddress()
+              << std::endl;
 #ifdef _ANYDRIVE_FOUND_
-    if (configurator->getInfoForSlave(slave).type == EthercatDeviceConfigurator::EthercatSlaveType::Anydrive) {
+    if (configurator->getInfoForSlave(slave).type ==
+        EthercatDeviceConfigurator::EthercatSlaveType::Anydrive) {
       // Downcasting using shared pointers
-      anydrive_rsl::AnydriveEthercatSlave::SharedPtr any_slave_ptr = std::dynamic_pointer_cast<anydrive_rsl::AnydriveEthercatSlave>(slave);
-      any_slave_ptr->setFSMGoalState(anydrive_rsl::fsm::StateEnum::ControlOp, false, 0, 0);
-      std::cout << "Putting slave into operational mode: " << any_slave_ptr->getName() << " : " << any_slave_ptr->getAddress() << std::endl;
+      anydrive_rsl::AnydriveEthercatSlave::SharedPtr any_slave_ptr =
+          std::dynamic_pointer_cast<anydrive_rsl::AnydriveEthercatSlave>(slave);
+      any_slave_ptr->setFSMGoalState(anydrive_rsl::fsm::StateEnum::ControlOp,
+                                     false, 0, 0);
+      std::cout << "Putting slave into operational mode: "
+                << any_slave_ptr->getName() << " : "
+                << any_slave_ptr->getAddress() << std::endl;
     }
 #endif
   }
 
   std::cout << "Startup finished" << std::endl;
 
-  // nothing further to do in this thread.
-  pause();
+  while (true) {
+    if (mainAbrt) {
+      for (const auto &master : configurator->getMasters()) {
+        master->preShutdown();
+      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      abrt = true;
+      for (const auto &master : configurator->getMasters()) {
+        master->shutdown();
+      }
+      break;
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+  }
+
+  std::cout << "Exit" << std::endl;
+  exit(0);
 }
