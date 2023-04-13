@@ -38,8 +38,7 @@
 **   be sourced and the linker cannot find the necessary libraries. Use the
 **   following command to start this executable:
 **   ┌────
-**   │ sudo bash -c 'source /absolute/path/to/your/catkin_ws/devel/setup.bash;
-*path/to/executable path/to/setup.yaml'
+**   │ sudo bash -c 'source /absolute/path/to/your/catkin_ws/devel/setup.bash; path/to/executable path/to/setup.yaml'
 **   └────
 **
 **

@@ -1,0 +1,30 @@
+anydrive_setup:
+  ethercat_master:
+    time_step: 0.0025
+    update_rate_too_low_warn_threshold: 50.0
+  ethercat_devices:
+    DynaDrive1:
+      type: Anydrive
+      communication:
+        ethercat_address: 1
+        ethercat_bus: enx606d3c41341b
+        ethercat_pdo_type: A
+      configuration:
+        max_current: 20.0
+        max_freeze_current: 15.0
+        dgainFilterCutoffFrequency: 30.0
+        direction: -1
+        goal_states:
+          shutdown: MotorOp
+          startup: ControlOp
+        joint_position_limits:
+          hard:
+            max: 0.0
+            min: 0.0
+          sdk:
+            max: 0.0
+            min: 0.0
+          soft:
+            max: 0.0
+            min: 0.0
+        max_motor_velocity: 40.0
