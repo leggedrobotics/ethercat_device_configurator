@@ -271,7 +271,7 @@ void EthercatDeviceConfigurator::setup(bool startup)
             std::string configuration_file_path = handleFilePath(entry.config_file_path,m_setup_file_path);
             slave = elmo::Elmo::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address);
 #else
-            throw std::runtime_error("elmo_ethercat_sdk not availabe.");
+            throw std::runtime_error("elmo_ethercat_sdk configured in ethercat setup.yaml but dependency not found.");
 #endif
 
         }
@@ -281,7 +281,7 @@ void EthercatDeviceConfigurator::setup(bool startup)
             std::string configuration_file_path = handleFilePath(entry.config_file_path,m_setup_file_path);
             slave = mps_ethercat_sdk::MPSDrive::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address);
 #else
-            throw std::runtime_error("mps_ethercat_sdk not availabe, dependency not found.");
+            throw std::runtime_error("mps_ethercat_sdk configured in ethercat setup.yaml but dependency not found.");
 #endif
           }
             break;
@@ -291,7 +291,7 @@ void EthercatDeviceConfigurator::setup(bool startup)
             std::string configuration_file_path = handleFilePath(entry.config_file_path,m_setup_file_path);
             slave = maxon::Maxon::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address);
 #else
-            throw std::runtime_error("maxon_epos_ethercat_sdk not availabe.");
+            throw std::runtime_error("maxon_epos_ethercat_sdk configured in ethercat setup.yaml but dependency not found.");
 #endif
 
         }
@@ -330,7 +330,7 @@ void EthercatDeviceConfigurator::setup(bool startup)
             std::string configuration_file_path = handleFilePath(entry.config_file_path,m_setup_file_path);
             slave = anydrive::AnydriveEthercatSlave::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address, pdo);
 #else
-            throw std::runtime_error("anydrive_ethercat_sdk not available");
+            throw std::runtime_error("anydrive_sdk configured in ethercat setup.yaml but dependency not found.");
 #endif
         }
             break;
@@ -368,7 +368,7 @@ void EthercatDeviceConfigurator::setup(bool startup)
             std::string configuration_file_path = handleFilePath(entry.config_file_path,m_setup_file_path);
             slave = rokubimini::ethercat::RokubiminiEthercat::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address, pdo);
 #else
-            throw std::runtime_error("rokubimini_ethercat_sdk not available");
+            throw std::runtime_error("rokubimini_ethercat_sdk configured in ethercat setup.yaml but dependency not found.");
 #endif
         }
             break;
