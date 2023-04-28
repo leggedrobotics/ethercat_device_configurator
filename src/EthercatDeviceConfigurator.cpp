@@ -275,6 +275,7 @@ void EthercatDeviceConfigurator::setup(bool startup)
 #endif
 
         }
+          break;
           case EthercatSlaveType::MPSDrive:
           {
 #ifdef _MPSDRIVE_FOUND_
