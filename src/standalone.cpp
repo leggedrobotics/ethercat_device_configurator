@@ -145,7 +145,7 @@ void worker()
                 if(elmo_slave_ptr->lastPdoStateChangeSuccessful() && elmo_slave_ptr->getReading().getDriveState() == elmo::DriveState::OperationEnabled)
                 {
                     elmo::Command command;
-                    command.setTargetVelocity(50);
+                    command.setTargetVelocity(1);
                     elmo_slave_ptr->stageCommand(command);
                 }
                 else
