@@ -108,6 +108,54 @@ public:
         return slaves;
     }
 
+    /**
+     * @brief getSlavesOfType - return all slaves of type T (vector of shared_ptr).
+     * @parm ethercatSlaveType TypeEnum to reduce number of dynamic_casts.
+     * @note Warning cache the result if you need them on a regular base. Might have bad performance
+     */
+    template<typename T, typename dummy = std::enable_if_t<std::is_base_of_v<ecat_master::EthercatDevice, T>>>
+    std::vector<std::shared_ptr<T>> getSlavesOfType(EthercatSlaveType ethercatSlaveType)
+    {
+
+      std::vector<std::shared_ptr<T>> slaves;
+
+      for(auto & slave: m_slaves)
+      {
+        if(getInfoForSlave(slave).type == ethercatSlaveType) { //we do not have to do dynamic cast for all slaves..
+          auto ptr = std::dynamic_pointer_cast<T>(slave);
+          if (ptr) {
+            slaves.push_back(ptr);
+          }
+          else{
+            //something is wrong.
+            throw std::runtime_error("getSlavesOfType: ethercatSlaveTyp and provided Type does not match!");
+          }
+        }
+      }
+      return slaves;
+    }
+
+    /**
+     * @brief getSlavesOfTypeOnBus - return all slaves of type T on Busname (vector of shared_ptr).
+     * @note Warning cache the result if you need them on a regular base! Might have bad performance
+     */
+    template<typename T, typename dummy = std::enable_if_t<std::is_base_of_v<ecat_master::EthercatDevice, T>>>
+    std::vector<std::shared_ptr<T>> getSlavesOfTypeOnBus(const std::string& busName)
+    {
+      std::vector<std::shared_ptr<T>> slaves;
+
+      for(auto & slave: m_slaves)
+      {
+        if(getInfoForSlave(slave).ethercat_bus == busName) {
+          auto ptr = std::dynamic_pointer_cast<T>(slave); //RTTI, for every slave on bus..
+          if (ptr) {
+            slaves.push_back(ptr);
+          }
+        }
+      }
+      return slaves;
+    }
+
 private:
     //Stores the general master configuration.
     //If slaves on multiple bus interfaces are detected, the bus interface in this object will be the interface of the last configured interface

@@ -35,6 +35,8 @@
 **   README.md for more details.
  */
 #include "ethercat_device_configurator/EthercatDeviceConfigurator.hpp"
+#include "message_logger/message_logger.hpp"
+
 
 //TODO could this be more dynamic with pluginlib?
 #ifdef _ANYDRIVE_FOUND_
@@ -56,239 +58,321 @@
 #include <thread>
 #include <csignal>
 
-std::unique_ptr<std::thread> worker_thread;
-bool abrt = false;
+namespace example {
 
-EthercatDeviceConfigurator::SharedPtr configurator;
 
-unsigned int counter = 0;
-
-void worker()
-{
-    bool rtSuccess = true;
-    for(const auto & master: configurator->getMasters())
-    {
-        rtSuccess &= master->setRealtimePriority(99);
-    }
-    std::cout << "Setting RT Priority: " << (rtSuccess? "successful." : "not successful. Check user privileges.") << std::endl;
-
-    // Flag to set the drive state for the elmos on first startup
-#ifdef _ELMO_FOUND_
-    bool elmoEnabledAfterStartup = false;
-#endif
-    // Flag to set the drive state for the elmos on first startup
-#ifdef _MAXON_FOUND_
-    bool maxonEnabledAfterStartup = false;
-    // bool maxonOperational = false;
-#endif
-    /*
-    ** The communication update loop.
-    ** This loop is supposed to be executed at a constant rate.
-    ** The EthercatMaster::update function incorporates a mechanism
-    ** to create a constant rate.
-     */
-    while(!abrt)
-    {
-        /*
-        ** Update each master.
-        ** This sends tha last staged commands and reads the latest readings over EtherCAT.
-        ** The StandaloneEnforceRate update mode is used.
-        ** This means that average update rate will be close to the target rate (if possible).
-         */
-        for(const auto & master: configurator->getMasters() )
-        {
-            master->update(ecat_master::UpdateMode::StandaloneEnforceRate);
-        }
-
-        /*
-        ** Do things with the attached devices.
-        ** Your lowlevel control input / measurement logic goes here.
-        ** Different logic can be implemented for each device.
-         */
-        for(const auto & slave:configurator->getSlaves())
-        {
-            // Anydrive
-            if(configurator->getInfoForSlave(slave).type == EthercatDeviceConfigurator::EthercatSlaveType::Anydrive)
-            {
+//possible dummy slave callbacks:
 #ifdef _ANYDRIVE_FOUND_
-                anydrive::AnydriveEthercatSlave::SharedPtr any_slave_ptr = std::dynamic_pointer_cast<anydrive::AnydriveEthercatSlave>(slave);
-
-                if(any_slave_ptr->getActiveStateEnum() == anydrive::fsm::StateEnum::ControlOp)
-                {
-                    anydrive::Command cmd;
-                    cmd.setModeEnum(anydrive::mode::ModeEnum::MotorVelocity);
-                    cmd.setMotorVelocity(10);
-
-                    any_slave_ptr->setCommand(cmd);
-                }
-#endif
-
-            }
-            // Rokubi
-            else if(configurator->getInfoForSlave(slave).type == EthercatDeviceConfigurator::EthercatSlaveType::Rokubi)
-            {
-#ifdef _ROKUBI_FOUND_
-                std::shared_ptr<rokubimini::ethercat::RokubiminiEthercat> rokubi_slave_ptr = std::dynamic_pointer_cast<rokubimini::ethercat::RokubiminiEthercat>(slave);
-                // Do things with the Rokubi sensors here
-#endif
-            }
-
-            // Elmo
-            else if(configurator->getInfoForSlave(slave).type == EthercatDeviceConfigurator::EthercatSlaveType::Elmo)
-            {
-#ifdef _ELMO_FOUND_
-                std::shared_ptr<elmo::Elmo> elmo_slave_ptr = std::dynamic_pointer_cast<elmo::Elmo>(slave);
-                if(!elmoEnabledAfterStartup)
-                    // Set elmos to operation enabled state, do not block the call!
-                    elmo_slave_ptr->setDriveStateViaPdo(elmo::DriveState::OperationEnabled, false);
-                // set commands if we can
-                if(elmo_slave_ptr->lastPdoStateChangeSuccessful() && elmo_slave_ptr->getReading().getDriveState() == elmo::DriveState::OperationEnabled)
-                {
-                    elmo::Command command;
-                    command.setTargetVelocity(1);
-                    elmo_slave_ptr->stageCommand(command);
-                }
-                else
-                {
-                    MELO_WARN_STREAM("Elmo '" << elmo_slave_ptr->getName() << "': " << elmo_slave_ptr->getReading().getDriveState());
-                    //elmo_slave_ptr->setDriveStateViaPdo(elmo::DriveState::OperationEnabled, false);
-                }
-                auto reading = elmo_slave_ptr->getReading();
-                // std::cout << "Elmo '" << elmo_slave_ptr->getName() << "': "
-                //                 << "velocity: " << reading.getActualVelocity() << " rad/s\n";
-#endif
-            }
-              // Elmo
-            else if(configurator->getInfoForSlave(slave).type == EthercatDeviceConfigurator::EthercatSlaveType::MPSDrive)
-            {
-#ifdef _MPSDRIVE_FOUND_
-              std::shared_ptr<mps_ethercat_sdk::MPSDrive> mpsDrive = std::dynamic_pointer_cast<mps_ethercat_sdk::MPSDrive>(slave);
-                // Set elmos to operation enabled state, do not block the call!
-                //mpsDrive->setDriveStateViaPdo(mps_ethercat_sdk::DriveState::OperationEnabled, false);
-              // set commands if we can
-              if(mpsDrive->lastPdoStateChangeSuccessful() && mpsDrive->getReading().getDriveState() == mps_ethercat_sdk::DriveState::OperationEnabled)
-              {
-                mps_ethercat_sdk::Command command;
-                command.setActuatorVelocityDesired(10);
-                //command.setKp(1.0);
-                command.setKd(0.001);
-                mpsDrive->stageCommand(command);
-                MELO_DEBUG_STREAM("Staged command");
-                auto reading = mpsDrive->getReading();
-                std::cout << "MPSDrive:" << mpsDrive->getName() << " :\n "<< reading << std::endl;
-              }
-              else
-              {
-                MELO_WARN_STREAM("MPS '" << mpsDrive->getName() << "': " << mpsDrive->getReading().getDriveState());
-              }
-
-#endif
-            }
-            // Maxon
-            else if (configurator->getInfoForSlave(slave).type == EthercatDeviceConfigurator::EthercatSlaveType::Maxon)
-            {
-#ifdef _MAXON_FOUND_
-
-                // Keep constant update rate
-                // auto start_time = std::chrono::steady_clock::now();
-
-                std::shared_ptr<maxon::Maxon> maxon_slave_ptr = std::dynamic_pointer_cast<maxon::Maxon>(slave);
-
-                if (!maxonEnabledAfterStartup)
-                {
-                    // Set maxons to operation enabled state, do not block the call!
-                    maxon_slave_ptr->setDriveStateViaPdo(maxon::DriveState::OperationEnabled, false);
-                }
-
-                // set commands if we can
-                if (maxon_slave_ptr->lastPdoStateChangeSuccessful() &&
-                        maxon_slave_ptr->getReading().getDriveState() == maxon::DriveState::OperationEnabled)
-                {
-                    maxon::Command command;
-                    command.setModeOfOperation(maxon::ModeOfOperationEnum::CyclicSynchronousTorqueMode);
-                    auto reading = maxon_slave_ptr->getReading();
-                    command.setTargetPosition(reading.getActualPosition() + 10);
-                    command.setTargetTorque(-0.5);
-                    maxon_slave_ptr->stageCommand(command);
-                }
-                else
-                {
-                    MELO_WARN_STREAM("Maxon '" << maxon_slave_ptr->getName()
-                                                                         << "': " << maxon_slave_ptr->getReading().getDriveState());
-                }
-
-                // Constant update rate
-                // std::this_thread::sleep_until(start_time + std::chrono::milliseconds(1));
-
-#endif
-            }
-        }
-        counter++;
-#ifdef _ELMO_FOUND_
-        elmoEnabledAfterStartup = true;
-#endif
-#ifdef _MAXON_FOUND_
-        maxonEnabledAfterStartup = true;
-#endif
-    }
-}
-
-/*
-** Handle the interrupt signal.
-** This is the shutdown routine.
-** Note: This logic is executed in a thread separated from the communication update!
- */
-void signal_handler(int sig)
-{
-    /*
-    ** Pre shutdown procedure.
-    ** The devices execute procedures (e.g. state changes) that are necessary for a
-    ** proper shutdown and that must be done with PDO communication.
-    ** The communication update loop (i.e. PDO loop) continues to run!
-    ** You might thus want to implement some logic that stages zero torque / velocity commands
-    ** or simliar safety measures at this point using e.g. atomic variables and checking them
-    ** in the communication update loop.
-     */
-    for(const auto & master: configurator->getMasters())
-    {
-        master->preShutdown();
-    }
-
-    // stop the PDO communication at the next update of the communication loop
-    abrt = true;
-    worker_thread->join();
-
-    /*
-    ** Completely halt the EtherCAT communication.
-    ** No online communication is possible afterwards, including SDOs.
-     */
-    for(const auto & master: configurator->getMasters())
-    {
-        master->shutdown();
-    }
-
-    // Exit this executable
-    std::cout << "Shutdown" << std::endl;
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    exit(0);
-}
-
-#ifdef _ANYDRIVE_FOUND_
-// Some dummy callbacks
 void anydriveReadingCb(const std::string& name, const anydrive::ReadingExtended& reading)
 {
-    // std::cout << "Reading of anydrive '" << name << "'\n"
-    //           << "Joint velocity: " << reading.getState().getJointVelocity() << "\n\n";
+  MELO_INFO_STREAM( "[EthercatDeviceConfiguratorExample] Dummy Callback, reading of anydrive '" << name << "Joint velocity: " << reading.getState().getJointVelocity() );
 }
 #endif
 #ifdef _ROKUBI_FOUND_
 void rokubiReadingCb(const std::string& name, const rokubimini::Reading& reading)
 {
-    // std::cout << "Reading of rokubi '" << name << "'\n"
-    //           << "Force X: " << reading.getForceX() << "\n\n";
+  MELO_INFO_STREAM("[EthercatDeviceConfiguratorExample] Dummy Callback, Reading of rokubi: " << name  << " Force X: " << reading.getForceX());
 }
 #endif
 
+
+class ExampleEcatHardwareInterface {
+ public:
+  ExampleEcatHardwareInterface(){
+    //we could also do the init stuff during construction, but usually you want to have the init somewhere in a hardware interface state machine.
+  }
+
+  bool init(char* pathToConfigFile){
+    configurator_ = std::make_shared<EthercatDeviceConfigurator>(pathToConfigFile);
+
+    ecatMaster_ = configurator_->master(); //throws if more than one master.
+
+    //get a list
+#ifdef _ELMO_FOUND_
+    elmos_ = configurator_->getSlavesOfType<elmo::Elmo>(EthercatDeviceConfigurator::EthercatSlaveType::Elmo);
+#endif
+#ifdef _MAXON_FOUND_
+    maxons_ = configurator_->getSlavesOfType<maxon::Maxon>(EthercatDeviceConfigurator::EthercatSlaveType::Maxon);
+#endif
+#ifdef _ANYDRIVE_FOUND_
+    anydrives_ = configurator_->getSlavesOfType<anydrive::AnydriveEthercatSlave>(EthercatDeviceConfigurator::EthercatSlaveType::Anydrive);
+    /*
+    ** Add callbacks to the devices that support them.
+    ** If you don't want to use callbacks this part can simply be left out.
+    ** configurator->getSlavesOfType is another way of extracting only the devices
+    ** of a ceratain type.
+     */
+    for(const auto& anydrive : anydrives_)
+    {
+      anydrive->addReadingCb(anydriveReadingCb);
+    }
+#endif
+#ifdef _ROKUBI_FOUND_
+    botaSensors_ = configurator_->getSlavesOfType<rokubimini::ethercat::RokubiminiEthercat>(EthercatDeviceConfigurator::EthercatSlaveType::Rokubi));
+    /*
+    ** Add callbacks to the devices that support them.
+    ** If you don't want to use callbacks this part can simply be left out.
+    ** configurator->getSlavesOfType is another way of extracting only the devices
+    ** of a ceratain type.
+     */
+    for(auto& sensor : botaSensors_){
+      device->addReadingCb(rokubiReadingCb);
+    }
+#endif
+#ifdef _MPSDRIVE_FOUND_
+    mpsDrives_ = configurator_->getSlavesOfType<mps_ethercat_sdk::MPSDrive>(EthercatDeviceConfigurator::EthercatSlaveType::MPSDrive);
+#endif
+
+    // starts up the bus and all slaves, blocks till the bus is in SAFE_OP state therefore cyclic PDO reading thread can be started, and other operations can be performed in between.
+    // when the bus is directly put into OP state with startup(true) a watchdog on the slave is started which checks if cyclic PDO is happening, if this communication is not started fast enough
+    // the drive goes into an error state.
+    if(ecatMaster_->startup(false)){
+      MELO_INFO_STREAM("[EthercatDeviceConfiguratorExample] Successfully started Ethercat Master on Network Interface: " << ecatMaster_->getBusPtr()->getName());
+    }
+    else{
+      MELO_FATAL_STREAM("[EthercatDeviceConfiguratorExample] Could not start the Ethercat Master.")
+      return false;
+    }
+
+    //slaves are no in SAFE_OP state. SDO communication is available - special SDO config calls should be done in the slaves startup memeber function which is called by the ecatMaster->startup() or here.
+
+    workerThread_ = std::make_unique<std::thread>([this]() -> void {
+
+      if(ecatMaster_->setRealtimePriority(48)){ // do not set above 48, otherwise starve kernel processes on which soem depends.
+        MELO_INFO_STREAM("[EthercatDeviceConfiguratorExample] Set increased thread priority to 48")
+      } else{
+        MELO_WARN_STREAM("[EthercatDeviceConfiguratorExample] Could not incrase thread priority - check user privileges.")
+      }
+
+      //we could also do it outside of the thread after we knew it started looping.
+      if(ecatMaster_->activate()){
+        MELO_INFO_STREAM("[EthercatDeviceConfiguratorExample] Activated the Bus: " << ecatMaster_->getBusPtr()->getName())
+      }
+      // here the watchdog on the slave is activated. therefore don't block/sleep for 100ms..
+      while (!abrtFlag_){
+        ecatMaster_->update(ecat_master::UpdateMode::StandaloneEnforceStep);
+        // we could have interaction with some slaves here, e.g. getting and setting commands. this is than in sync with the ethercat loop.
+        // but we have to be carefully to no block it too long. otherwise problems with certain slaves.
+
+      }
+      //make sure that bus is in SAFE_OP state, if preShutdown(true) should already do it, but makes sense to have this call here.
+      ecatMaster_->deactivate();
+    });
+
+    return true;
+  }
+
+  void someUserStartInteraction(){
+
+    //this would be user interaction e.g. publishing, subscribing, writing to shared memory whatever.
+    //be aware that this is a concurrent interaction with stageCommand, getReading of the slaves. If you do this to fast you might starve the ethercat cyclic loop which
+    //might cause problems with certain slaves, which require a strict timing. e.g. drives in cyclic synchronous modes (csp, csv, cst, csc)
+    //with those drives you also have to check that interpolationIndex is set so that it reflects the update time of the ethercat loop.
+
+#ifdef _ANYDRIVE_FOUND_
+    for(auto& anydrive : anydrives_) {
+
+      //put into controlOP, in blocking mode.
+      anydrive->setFSMGoalState(anydrive::fsm::StateEnum::ControlOp, true, 1, 10);
+    }
+#endif
+#ifdef _ROKUBI_FOUND_
+    // Do things with the Rokubi sensors here, seens a simple sensor no big activation needed.
+#endif
+#ifdef _ELMO_FOUND_
+    for (auto& elmo : elmos_) {
+      // Set elmos to operation enabled state, there is a option which is blocking s.t the user thread can pause till all elmos are operational
+      elmo->setDriveStateViaPdo(elmo::DriveState::OperationEnabled, true);
+      // set commands if we can
+    }
+#endif
+
+#ifdef _MPSDRIVE_FOUND_
+    // Set elmos to operation enabled state, do not block the call!
+    for(auto& mpsDrive : mpsDrives_){
+      mpsDrive->setDriveStateViaPdo(mps_ethercat_sdk::DriveState::OperationEnabled, false);
+    }
+
+#endif
+#ifdef _MAXON_FOUND_
+    for(auto& maxon : maxons_) {
+      // Set maxons to operation enabled state, do not block the call!
+      maxon->setDriveStateViaPdo(maxon::DriveState::OperationEnabled, true); //todo check
+    }
+#endif
+  }
+
+  void cyclicUserInteraction(){
+  userCyclicThread_ = std::make_unique<std::thread>([this](){
+    while(userInteraction_) {
+      //this can run fully async, as here! but be aware that we're doing concurrent blocking calls into the time sensitive cyclic PDO loop.
+      //there are multiple ways to avoid/improve this
+      //e.g. syncing this interaction with the cyclic PDO loop with conditional variables
+      //e.g. queue the readings into a (lock-free) fancy produces consumer queue
+      //e.g. copy out the readings in a callback. (the call to it is than again synced into cyclic PDO loop)
+#ifdef _ANYDRIVE_FOUND_
+      for(auto& anydrive : anydrives_){
+        if (anydrive->getActiveStateEnum() == anydrive::fsm::StateEnum::ControlOp) {
+          anydrive::Command cmd;
+          cmd.setModeEnum(anydrive::mode::ModeEnum::MotorVelocity);
+          cmd.setMotorVelocity(5);
+          //this is a concurrent call into the ethercat loop.
+          anydrive->setCommand(cmd);
+        }
+      }
+#endif
+#ifdef _ELMO_FOUND_
+      for (auto& elmo : elmos_) {
+        if(elmo->lastPdoStateChangeSuccessful() && elmo->getReading().getDriveState() == elmo::DriveState::OperationEnabled)
+        {
+          elmo::Command command;
+          //we would get a command from somewhere here e.g. a feedback controller, shared memory communication, other thread.
+          command.setTargetVelocity(1);
+
+          //this is one concurrent call.
+          elmo->stageCommand(command);
+        }
+        // this is an other concurrent call into the ethercat update loop
+        auto reading = elmo->getReading();
+        MELO_INFO_STREAM("[EthercatDeviceConfiguratorExample] Elmo: " << elmo->getName() << " velocity: " << reading.getActualVelocity());
+      }
+#endif
+#ifdef _MPSDRIVE_FOUND_
+      for(auto& mpsDrive : mpsDrives_) {
+        if (mpsDrive->lastPdoStateChangeSuccessful() &&
+            mpsDrive->getReading().getDriveState() == mps_ethercat_sdk::DriveState::OperationEnabled) {
+          mps_ethercat_sdk::Command command;
+          command.setActuatorVelocityDesired(10);
+          command.setKp(0.4);
+          mpsDrive->stageCommand(command);
+          auto reading = mpsDrive->getReading();
+          MELO_INFO_STREAM("[EthercatDeviceConfiguratorExample] MPSDrive: " << mpsDrive->getName() << " :\n " << reading );
+        } else {
+          MELO_WARN_STREAM("[EthercatDeviceConfiguratorExample] MPSDrive not in operational state: " << mpsDrive->getName() << "': " << mpsDrive->getReading().getDriveState());
+        }
+      }
+#endif
+#ifdef _MAXON_FOUND_
+      for(auto& maxon : maxons_){
+        if (maxon->lastPdoStateChangeSuccessful() &&
+            maxon->getReading().getDriveState() == maxon::DriveState::OperationEnabled)
+      {
+        maxon::Command command;
+        command.setModeOfOperation(maxon::ModeOfOperationEnum::CyclicSynchronousTorqueMode);
+        auto reading = maxon->getReading();
+        command.setTargetPosition(reading.getActualPosition() + 10);
+        maxon->stageCommand(command);
+      }
+      else
+      {
+        MELO_WARN_STREAM("[EthercatDeviceConfiguratorExample] Maxon not in operationEnabled state: " << maxon_slave_ptr->getName()
+                                   << "': " << maxon_slave_ptr->getReading().getDriveState());
+      }
+    }
+#endif
+
+      //this is async. no special timing needed, or your application has to take care for it.. just make sure to not starve the cyclic PDO loop.
+      std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    }
+  });
+
+  }
+
+
+  void shutdown(){
+
+    //stop the user code.
+    userInteraction_ = false;
+    if(userCyclicThread_) {
+      if (userCyclicThread_->joinable()) {
+        userCyclicThread_->join();
+      }
+    }
+    MELO_INFO_STREAM("[EthercatDeviceConfiguratorExample] Shutdown user cyclic thread")
+
+    //call preShutdown before terminating the cyclic PDO communication!!
+    if(ecatMaster_){
+      ecatMaster_->preShutdown(true);
+    }
+    //we can do more shutdown stuff here. since bus is in SAFE OP there is no strange PDO timeout which we might trigger.
+    MELO_INFO_STREAM("[EthercatDeviceConfiguratorExample] PreShutdown ethercat master and all slaves.")
+
+    abrtFlag_ = true;
+    if(workerThread_){
+      if(workerThread_->joinable()){
+        workerThread_->join();
+      }
+    }
+    MELO_INFO_STREAM("[EthercatDeviceConfiguratorExample] Joined the ethercat master.")
+
+
+    if(ecatMaster_){
+      ecatMaster_->shutdown();
+    }
+    MELO_INFO_STREAM("[EthercatDeviceConfiguratorExample] Fully shutdown.")
+  }
+
+  ~ExampleEcatHardwareInterface(){
+    //if no signal handler is used - we can do this in the destructor.
+    shutdown();
+  }
+
+ private:
+
+  EthercatDeviceConfigurator::SharedPtr configurator_;
+  ecat_master::EthercatMaster::SharedPtr ecatMaster_;
+
+  // cache the devices on the bus, since topology of the robot does not change dynamically.
+  //in the more general case you would do this per bus. e.g. you have a robot with two ethercat buses.
+  //in general use one bus per robot - that's the main motivation of having a bus.
+  #ifdef _ELMO_FOUND_
+    const bool elmoEnabledAfterStartup_ = false;
+    std::vector<std::shared_ptr<elmo::Elmo> > elmos_{};
+  #endif
+  #ifdef _MAXON_FOUND_
+    bool maxonEnabledAfterStartup_ = false;
+    std::vector<std::shared_ptr<maxon::Maxon>> maxons_{};
+  #endif
+  #ifdef _ANYDRIVE_FOUND_
+    std::vector<anydrive::AnydriveEthercatSlave::SharedPtr> anydrives_{};
+  #endif
+  #ifdef _ROKUBI_FOUND_
+    std::vector<std::shared_ptr<rokubimini::ethercat::RokubiminiEthercat>> botaSensors_{};
+  #endif
+  #ifdef _MPSDRIVE_FOUND_
+    std::vector<mps_ethercat_sdk::MPSDrive::SharedPtr> mpsDrives_{};
+  #endif
+
+  std::unique_ptr<std::thread> workerThread_;
+  std::unique_ptr<std::thread> userCyclicThread_;
+  std::atomic<bool> abrtFlag_{false};
+  std::atomic<bool> userInteraction_{true};
+};
+
+class SimpleSignalHandler {
+ public:
+  static void sigIntCall([[maybe_unused]]int signal) {
+    if (!sigIntCallbacks_.empty()) {
+      for (auto& sigIntCallback : sigIntCallbacks_) {
+        sigIntCallback(signal);
+      }
+    }
+  }
+
+  static void registerSignalHandler(){
+    std::signal(SIGINT, SimpleSignalHandler::sigIntCall);
+  }
+
+  static void addSigIntCallback(std::function<void(int)> callback){
+    sigIntCallbacks_.push_back(callback);
+  }
+
+ static std::vector<std::function<void(int)>> sigIntCallbacks_;
+
+};
+
+std::vector<std::function<void(int)>> SimpleSignalHandler::sigIntCallbacks_ = {};
+};
 
 
 /*
@@ -297,90 +381,25 @@ void rokubiReadingCb(const std::string& name, const rokubimini::Reading& reading
  */
 int main(int argc, char**argv)
 {
-    // Set the abrt_ flag upon receiving an interrupt signal (e.g. Ctrl-c)
-    std::signal(SIGINT, signal_handler);
+  if(argc < 2)
+  {
+    std::cerr << "pass path to 'setup.yaml' as command line argument" << std::endl;
+    return EXIT_FAILURE;
+  }
 
-    if(argc < 2)
-    {
-        std::cerr << "pass path to 'setup.yaml' as command line argument" << std::endl;
-        return EXIT_FAILURE;
-    }
-    // a new EthercatDeviceConfigurator object (path to setup.yaml as constructor argument)
-    configurator = std::make_shared<EthercatDeviceConfigurator>(argv[1]);
+  example::ExampleEcatHardwareInterface exampleEcatHardwareInterface{};
 
-    /*
-    ** Add callbacks to the devices that support them.
-    ** If you don't want to use callbacks this part can simply be left out.
-    ** configurator->getSlavesOfType is another way of extracting only the evices
-    ** of a ceratin type.
-     */
-#ifdef _ANYDRIVE_FOUND_
-    for(const auto& device : configurator->getSlavesOfType<anydrive::AnydriveEthercatSlave>())
-    {
-        device->addReadingCb(anydriveReadingCb);
-    }
-#endif
-#if _ROKUBI_FOUND_
-    for(const auto& device : configurator->getSlavesOfType<rokubimini::ethercat::RokubiminiEthercat>()){
-        device->addReadingCb(rokubiReadingCb);
-    }
-#endif
+  example::SimpleSignalHandler::addSigIntCallback( [&exampleEcatHardwareInterface]([[maybe_unused]]int signal){
+    exampleEcatHardwareInterface.shutdown();
+  });
 
-    /*
-    ** Start all masters.
-    ** There is exactly one bus per master which is also started.
-    ** All online (i.e. SDO) configuration is done during this call.
-    ** The EtherCAT interface is active afterwards, all drives are in Operational
-    ** EtherCAT state and PDO communication may begin.
-     */
-    for(auto & master: configurator->getMasters())
-    {
-        if(!master->startup())
-        {
-            std::cerr << "Startup not successful." << std::endl;
-            return EXIT_FAILURE;
-        }
-    }
+  example::SimpleSignalHandler::registerSignalHandler();
 
-    // Start the PDO loop in a new thread.
-    std::cout << "[Standalone example] started update worker" << std::endl;
-    worker_thread = std::make_unique<std::thread>(&worker);
+  exampleEcatHardwareInterface.init(argv[1]);
+  MELO_INFO_STREAM("[EthercatExmample] Startup completed.")
+  exampleEcatHardwareInterface.someUserStartInteraction();
+  exampleEcatHardwareInterface.cyclicUserInteraction();
 
-    /*
-    ** Wait for a few PDO cycles to pass.
-    ** Set anydrives into to ControlOp state (internal state machine, not EtherCAT states)
-     */
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    for(auto & slave: configurator->getSlaves())
-    {
-        std::cout << " " << slave->getName() << ": " << slave->getAddress() << std::endl;
-#ifdef _ANYDRIVE_FOUND_
-        if(configurator->getInfoForSlave(slave).type == EthercatDeviceConfigurator::EthercatSlaveType::Anydrive)
-        {
-            // Downcasting using shared pointers
-            anydrive::AnydriveEthercatSlave::SharedPtr any_slave_ptr = std::dynamic_pointer_cast<anydrive::AnydriveEthercatSlave>(slave);
-            any_slave_ptr->setFSMGoalState(anydrive::fsm::StateEnum::ControlOp, false,0,0);
-            std::cout << "Putting slave into operational mode: " << any_slave_ptr->getName() << " : " << any_slave_ptr->getAddress() << std::endl;
-        }
-#endif
-#ifdef _MPSDRIVE_FOUND_
-      if(configurator->getInfoForSlave(slave).type == EthercatDeviceConfigurator::EthercatSlaveType::MPSDrive)
-        {
-            // Downcasting using shared pointers
-            mps_ethercat_sdk::MPSDrive::SharedPtr mpsSlave = std::dynamic_pointer_cast<mps_ethercat_sdk::MPSDrive>(slave);
-            std::cout << "Setting slave state via pdo" << std::endl;
-            if(mpsSlave->setDriveStateViaPdo(mps_ethercat_sdk::DriveState::OperationEnabled, true)){
-              std::cout << "Put slave into operational drive state: " << mpsSlave->getName() << " : " << mpsSlave->getAddress() << std::endl;
-            }else{
-              std::cout << "DriveStateChange:" << mpsSlave->getName() << " Addr: " << mpsSlave->getAddress() <<"   Timeout" << std::endl;
-            }
-        }
-#endif
-
-    }
-
-    std::cout << "Startup finished" << std::endl;
-
-    // nothing further to do in this thread.
-    pause();
+  // nothing further to do in this thread.
+  pause();
 }
