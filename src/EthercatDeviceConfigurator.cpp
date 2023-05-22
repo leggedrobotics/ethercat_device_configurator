@@ -118,30 +118,56 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
     YAML::Node node = YAML::LoadFile(path);
 
     //Ethercat master configuration
-    if(node["ethercat_master"])
+    if(node["ethercat_master_s"])
     {
-        const auto ecat_master_node = node["ethercat_master"];
-
-        if(ecat_master_node["time_step"])
-        {
-            m_master_configuration.timeStep = ecat_master_node["time_step"].as<double>();
+        const YAML::Node& ecat_master_nodes = node["ethercat_master_s"];
+        if(ecat_master_nodes.size() == 0){
+          throw std::runtime_error("[EthercatDeviceConfigurator] Minimum one master must be defined.");
         }
-        else
-        {
+        for(const auto& ecat_master_node : ecat_master_nodes) {
+          ecat_master::EthercatMasterConfiguration masterConfiguration{};
+          if(ecat_master_node["name"]){
+            masterConfiguration.name = ecat_master_node["name"].as<std::string>();
+          }
+          if (ecat_master_node["ethercat_bus"]){
+            masterConfiguration.networkInterface = ecat_master_node["ethercat_bus"].as<std::string>();
+          } else{
+            throw std::runtime_error("[EthercatDeviceConfigurator] No ethercat_bus defined in master node.");
+          }
+          if (ecat_master_node["time_step"]) {
+            masterConfiguration.timeStep = ecat_master_node["time_step"].as<double>();
+          } else {
             throw std::runtime_error("[EthercatDeviceConfigurator] Node time_step missing in ethercat_master");
-        }
-        if(ecat_master_node["update_rate_too_low_warn_threshold"])
-        {
-            m_master_configuration.updateRateTooLowWarnThreshold = ecat_master_node["update_rate_too_low_warn_threshold"].as<int>();
-        }
-        else
-        {
+          }
+          if (ecat_master_node["update_rate_too_low_warn_threshold"]) {
+            masterConfiguration.updateRateTooLowWarnThreshold = ecat_master_node["update_rate_too_low_warn_threshold"].as<int>();
+          } else {
             throw std::runtime_error("[EthercatDeviceConfigurator] Node update_rate_too_low_warn_threshold missing in ethercat_master");
+          }
+          if(ecat_master_node["bus_diagnosis"]){
+            masterConfiguration.doBusDiagnosis = ecat_master_node["bus_diagnosis"].as<bool>();
+          } else {
+            throw std::runtime_error("[EthercatDeviceConfigurator] Busdiagnosis filed not defined.");
+          }
+          if(ecat_master_node["error_counter_log"]){
+            masterConfiguration.logErrorCounters = ecat_master_node["error_counter_log"].as<bool>();
+            if(masterConfiguration.logErrorCounters && !masterConfiguration.doBusDiagnosis){
+              throw std::runtime_error("[EthercatDeviceConfigurator] Bus diagnosis has to be enabled to log the error counters.");
+            }
+          } else {
+            throw std::runtime_error("[EthercatDeviceConfigurator] error counter not defined.");
+          }
+          for(const auto& master_config : m_master_configurations){ //check all previous master config for duplicate bus. throw.
+            if(master_config.networkInterface == masterConfiguration.networkInterface){
+              throw std::runtime_error("[EthercatDeviceConfigurator] Two master configurations with the same interface / ethercatbus name defined. Check yaml config file");
+            }
+          }
+          m_master_configurations.push_back(masterConfiguration);
         }
     }
     else
     {
-        throw std::runtime_error("[EthercatDeviceConfigurator] Node ethercat_master is missing in yaml");
+        throw std::runtime_error("[EthercatDeviceConfigurator] Node ethercat_master_s is missing in yaml");
     }
 
     //Check if node is ethercat_devices
@@ -253,7 +279,6 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
     {
         throw std::runtime_error("[EthercatDeviceConfigurator] Node ethercat_devices missing in yaml");
     }
-
 }
 
 void EthercatDeviceConfigurator::setup(bool startup)
@@ -385,8 +410,15 @@ void EthercatDeviceConfigurator::setup(bool startup)
     }
 
 
-    //Create master for each bus needed
+    //Create the defined master
+    for(const auto& master_config : m_master_configurations) {
+      std::shared_ptr<ecat_master::EthercatMaster> master = std::make_shared<ecat_master::EthercatMaster>();
+      master->loadEthercatMasterConfiguration(master_config);
+      m_masters.push_back(master);
+    }
 
+    //Add the slave to the masters, throws if there is not a suited master or if there is a master without slaves
+    // (this adds a cross check to the yaml file)
     for(auto & slave: m_slaves)
     {
         //Find entry object for each slave because the slave base class does not provide info about the interface name
@@ -411,18 +443,7 @@ void EthercatDeviceConfigurator::setup(bool startup)
         //No we create new master
         if(!master_found)
         {
-            std::shared_ptr<ecat_master::EthercatMaster> master = std::make_shared<ecat_master::EthercatMaster>();
-
-            m_master_configuration.networkInterface = entry.ethercat_bus;
-            master->loadEthercatMasterConfiguration(m_master_configuration);
-
-            m_masters.push_back(master);
-
-            //And attach the slave
-            if(!master->attachDevice(slave))
-            {
-                throw std::runtime_error("[EthercatDeviceConfigurator] could not attach slave: " + slave->getName() + " to master on interface: " + master->getConfiguration().networkInterface);
-            }
+          throw std::runtime_error("[EthercatDeviceConfigurator] No master found for slave " +slave->getName() + " check if ethercat bus matches in yaml file");
         }
 
     }

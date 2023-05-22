@@ -158,8 +158,7 @@ public:
 
 private:
     //Stores the general master configuration.
-    //If slaves on multiple bus interfaces are detected, the bus interface in this object will be the interface of the last configured interface
-    ecat_master::EthercatMasterConfiguration m_master_configuration;
+     std::vector<ecat_master::EthercatMasterConfiguration> m_master_configurations;
     //Vector of all configured masters
     std::vector<std::shared_ptr<ecat_master::EthercatMaster>> m_masters;
     //Vecotr of all configured slaves (For all masters)
