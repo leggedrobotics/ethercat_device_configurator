@@ -38,7 +38,6 @@
 #include "message_logger/message_logger.hpp"
 
 
-//TODO could this be more dynamic with pluginlib?
 #ifdef _ANYDRIVE_FOUND_
 #include <anydrive/Anydrive.hpp>
 #endif
@@ -65,13 +64,15 @@ namespace example {
 #ifdef _ANYDRIVE_FOUND_
 void anydriveReadingCb(const std::string& name, const anydrive::ReadingExtended& reading)
 {
-  MELO_INFO_STREAM( "[EthercatDeviceConfiguratorExample] Dummy Callback, reading of anydrive '" << name << "Joint velocity: " << reading.getState().getJointVelocity() );
+  //note: callbacks are called within the ethercat update loop, they should not block! otherwise you'll see working counter too low errors all the time and your motors will not behave as expected.
+  MELO_INFO_THROTTLE_STREAM(5, "[EthercatDeviceConfiguratorExample] Dummy Callback, reading of anydrive '" << name << "Joint velocity: " << reading.getState().getJointVelocity() );
 }
 #endif
 #ifdef _ROKUBI_FOUND_
 void rokubiReadingCb(const std::string& name, const rokubimini::Reading& reading)
 {
-  MELO_INFO_STREAM("[EthercatDeviceConfiguratorExample] Dummy Callback, Reading of rokubi: " << name  << " Force X: " << reading.getForceX());
+  //  //note: callbacks are called within the ethercat update loop, they should not block! otherwise you'll see working counter too low errors all the time and your motors will not behave as expected.
+  MELO_INFO_THROTTLE_STREAM(5, "[EthercatDeviceConfiguratorExample] Dummy Callback, Reading of rokubi: " << name  << " Force X: " << reading.getForceX());
 }
 #endif
 
@@ -208,14 +209,14 @@ class ExampleEcatHardwareInterface {
       //this can run fully async, as here! but be aware that we're doing concurrent blocking calls into the time sensitive cyclic PDO loop.
       //there are multiple ways to avoid/improve this
       //e.g. syncing this interaction with the cyclic PDO loop with conditional variables
-      //e.g. queue the readings into a (lock-free) fancy produces consumer queue
+      //e.g. queue the readings into a (lock-free) fancy producer consumer queue
       //e.g. copy out the readings in a callback. (the call to it is than again synced into cyclic PDO loop)
 #ifdef _ANYDRIVE_FOUND_
       for(auto& anydrive : anydrives_){
         if (anydrive->getActiveStateEnum() == anydrive::fsm::StateEnum::ControlOp) {
           anydrive::Command cmd;
           cmd.setModeEnum(anydrive::mode::ModeEnum::MotorVelocity);
-          cmd.setMotorVelocity(5);
+          cmd.setMotorVelocity(1);
           //this is a concurrent call into the ethercat loop.
           anydrive->setCommand(cmd);
         }
@@ -242,7 +243,7 @@ class ExampleEcatHardwareInterface {
         if (mpsDrive->lastPdoStateChangeSuccessful() &&
             mpsDrive->getReading().getDriveState() == mps_ethercat_sdk::DriveState::OperationEnabled) {
           mps_ethercat_sdk::Command command;
-          command.setActuatorVelocityDesired(10);
+          command.setActuatorVelocityDesired(1);
           command.setKp(0.4);
           mpsDrive->stageCommand(command);
           auto reading = mpsDrive->getReading();
@@ -314,6 +315,7 @@ class ExampleEcatHardwareInterface {
 
   ~ExampleEcatHardwareInterface(){
     //if no signal handler is used - we can do this in the destructor.
+    MELO_INFO_STREAM("[EthercatDeviceConfiguratorExample] Destructor.")
     shutdown();
   }
 
@@ -352,6 +354,7 @@ class ExampleEcatHardwareInterface {
 class SimpleSignalHandler {
  public:
   static void sigIntCall([[maybe_unused]]int signal) {
+    MELO_INFO_STREAM(" ** Signal Handling **")
     if (!sigIntCallbacks_.empty()) {
       for (auto& sigIntCallback : sigIntCallbacks_) {
         sigIntCallback(signal);
@@ -395,11 +398,13 @@ int main(int argc, char**argv)
 
   example::SimpleSignalHandler::registerSignalHandler();
 
-  exampleEcatHardwareInterface.init(argv[1]);
-  MELO_INFO_STREAM("[EthercatExmample] Startup completed.")
-  exampleEcatHardwareInterface.someUserStartInteraction();
-  exampleEcatHardwareInterface.cyclicUserInteraction();
-
+  if(exampleEcatHardwareInterface.init(argv[1])) {
+    MELO_INFO_STREAM("[EthercatExmample] Startup completed.")
+    exampleEcatHardwareInterface.someUserStartInteraction();
+    exampleEcatHardwareInterface.cyclicUserInteraction();
+  }
   // nothing further to do in this thread.
   pause();
+
+  return 0;
 }
