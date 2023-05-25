@@ -33,6 +33,11 @@
 #include "elmo_ethercat_sdk/Elmo.hpp"
 #endif
 
+/*MPS*/
+#ifdef _MPSDRIVE_FOUND_
+#include "mps_ethercat_sdk/MPSDrive.hpp"
+#endif
+
 /*Maxon*/
 #ifdef _MAXON_FOUND_
 #include "maxon_epos_ethercat_sdk/Maxon.hpp"
@@ -61,7 +66,7 @@ static bool path_exists(std::string& path) {
 #endif
 }
 
-EthercatDeviceConfigurator::EthercatDeviceConfigurator(bool startup) {
+EthercatDeviceConfigurator::EthercatDeviceConfigurator() {
   MELO_DEBUG("[EthercatDeviceConfigurator] Parsing and setup finished");
 }
 
@@ -110,14 +115,41 @@ const std::string& EthercatDeviceConfigurator::getSetupFilePath() {
 
 void EthercatDeviceConfigurator::parseParameter(XmlRpc::XmlRpcValue& params) {
   // Ethercat master configuration
-  if (params.hasMember("ethercat_master")) {
-    XmlRpc::XmlRpcValue ethercatMasterParams = param_io::getMember<XmlRpc::XmlRpcValue>(params, "ethercat_master");
-    if (ethercatMasterParams.hasMember("time_step")) {
-      m_master_configuration.timeStep = param_io::getMember<double>(ethercatMasterParams, "time_step");
-    }
-    if (ethercatMasterParams.hasMember("update_rate_too_low_warn_threshold")) {
-      m_master_configuration.updateRateTooLowWarnThreshold =
-          param_io::getMember<double>(ethercatMasterParams, "update_rate_too_low_warn_threshold");
+  if (params.hasMember("ethercat_master_s")) {
+    XmlRpc::XmlRpcValue ethercatMastersParam = param_io::getMember<XmlRpc::XmlRpcValue>(params, "ethercat_master_s");
+    for (auto& ethercatMasterParam : ethercatMastersParam) {
+      ecat_master::EthercatMasterConfiguration masterConfiguration{};
+      if (ethercatMasterParam.second.hasMember("name")) {
+        masterConfiguration.name = param_io::getMember<std::string>(ethercatMasterParam.second, "name");
+      }
+      MELO_INFO_STREAM("[EthercatDeviceConfigurator] Found master: " << masterConfiguration.name);
+      if (ethercatMasterParam.second.hasMember("ethercat_bus")) {
+        masterConfiguration.networkInterface = param_io::getMember<std::string>(ethercatMasterParam.second, "ethercat_bus");
+      }
+      if (ethercatMasterParam.second.hasMember("time_step")) {
+        masterConfiguration.timeStep = param_io::getMember<double>(ethercatMasterParam.second, "time_step");
+      }
+      if (ethercatMasterParam.second.hasMember("update_rate_too_low_warn_threshold")) {
+        masterConfiguration.updateRateTooLowWarnThreshold =
+            param_io::getMember<double>(ethercatMasterParam.second, "update_rate_too_low_warn_threshold");
+      }
+      if (ethercatMasterParam.second.hasMember("bus_diagnosis")) {
+        masterConfiguration.doBusDiagnosis = param_io::getMember<bool>(ethercatMasterParam.second, "bus_diagnosis");
+      }
+      if (ethercatMasterParam.second.hasMember("error_counter_log")) {
+        masterConfiguration.logErrorCounters = param_io::getMember<bool>(ethercatMasterParam.second, "error_counter_log");
+        if (masterConfiguration.doBusDiagnosis && !masterConfiguration.logErrorCounters) {
+          throw std::runtime_error("[EthercatDeviceConfigurator] Bus diagnosis has to be enabled to log the error counters.");
+        }
+      }
+      for (const auto& master_config : m_master_configurations) {  // check all previous master config for duplicate bus. throw.
+        if (master_config.networkInterface == masterConfiguration.networkInterface) {
+          throw std::runtime_error(
+              "[EthercatDeviceConfigurator] Two master configurations with the same interface / ethercatbus name defined. Check "
+              "Parameters");
+        }
+      }
+      m_master_configurations.push_back(masterConfiguration);
     }
   } else {
     throw std::runtime_error("[EthercatDeviceConfigurator] Node ethercat_master is missing in parameter");
@@ -135,6 +167,8 @@ void EthercatDeviceConfigurator::parseParameter(XmlRpc::XmlRpcValue& params) {
         auto type_str = param_io::getMember<std::string>(deviceParam.second, "type");
         if (type_str == "Elmo") {
           entry.type = EthercatSlaveType::Elmo;
+        } else if (type_str == "MPSDrive") {
+          entry.type = EthercatSlaveType::MPSDrive;
         } else if (type_str == "Maxon") {
           entry.type = EthercatSlaveType::Maxon;
         } else if (type_str == "Anydrive") {
@@ -191,21 +225,55 @@ void EthercatDeviceConfigurator::parseFile(std::string path) {
   YAML::Node node = YAML::LoadFile(path);
 
   // Ethercat master configuration
-  if (node["ethercat_master"]) {
-    const auto ecat_master_node = node["ethercat_master"];
-
-    if (ecat_master_node["time_step"]) {
-      m_master_configuration.timeStep = ecat_master_node["time_step"].as<double>();
-    } else {
-      throw std::runtime_error("[EthercatDeviceConfigurator] Node time_step missing in ethercat_master");
+  if (node["ethercat_master_s"]) {
+    const YAML::Node& ecat_master_nodes = node["ethercat_master_s"];
+    if (ecat_master_nodes.size() == 0) {
+      throw std::runtime_error("[EthercatDeviceConfigurator] Minimum one master must be defined.");
     }
-    if (ecat_master_node["update_rate_too_low_warn_threshold"]) {
-      m_master_configuration.updateRateTooLowWarnThreshold = ecat_master_node["update_rate_too_low_warn_threshold"].as<int>();
-    } else {
-      throw std::runtime_error("[EthercatDeviceConfigurator] Node update_rate_too_low_warn_threshold missing in ethercat_master");
+    for (const auto& ecat_master_node : ecat_master_nodes) {
+      ecat_master::EthercatMasterConfiguration masterConfiguration{};
+      if (ecat_master_node["name"]) {
+        masterConfiguration.name = ecat_master_node["name"].as<std::string>();
+      }
+      if (ecat_master_node["ethercat_bus"]) {
+        masterConfiguration.networkInterface = ecat_master_node["ethercat_bus"].as<std::string>();
+      } else {
+        throw std::runtime_error("[EthercatDeviceConfigurator] No ethercat_bus defined in master node.");
+      }
+      if (ecat_master_node["time_step"]) {
+        masterConfiguration.timeStep = ecat_master_node["time_step"].as<double>();
+      } else {
+        throw std::runtime_error("[EthercatDeviceConfigurator] Node time_step missing in ethercat_master");
+      }
+      if (ecat_master_node["update_rate_too_low_warn_threshold"]) {
+        masterConfiguration.updateRateTooLowWarnThreshold = ecat_master_node["update_rate_too_low_warn_threshold"].as<int>();
+      } else {
+        throw std::runtime_error("[EthercatDeviceConfigurator] Node update_rate_too_low_warn_threshold missing in ethercat_master");
+      }
+      if (ecat_master_node["bus_diagnosis"]) {
+        masterConfiguration.doBusDiagnosis = ecat_master_node["bus_diagnosis"].as<bool>();
+      } else {
+        throw std::runtime_error("[EthercatDeviceConfigurator] Busdiagnosis filed not defined.");
+      }
+      if (ecat_master_node["error_counter_log"]) {
+        masterConfiguration.logErrorCounters = ecat_master_node["error_counter_log"].as<bool>();
+        if (masterConfiguration.logErrorCounters && !masterConfiguration.doBusDiagnosis) {
+          throw std::runtime_error("[EthercatDeviceConfigurator] Bus diagnosis has to be enabled to log the error counters.");
+        }
+      } else {
+        throw std::runtime_error("[EthercatDeviceConfigurator] error counter not defined.");
+      }
+      for (const auto& master_config : m_master_configurations) {  // check all previous master config for duplicate bus. throw.
+        if (master_config.networkInterface == masterConfiguration.networkInterface) {
+          throw std::runtime_error(
+              "[EthercatDeviceConfigurator] Two master configurations with the same interface / ethercatbus name defined. Check yaml "
+              "config file");
+        }
+      }
+      m_master_configurations.push_back(masterConfiguration);
     }
   } else {
-    throw std::runtime_error("[EthercatDeviceConfigurator] Node ethercat_master is missing in yaml");
+    throw std::runtime_error("[EthercatDeviceConfigurator] Node ethercat_master_s is missing in yaml");
   }
 
   // Check if node is ethercat_devices
@@ -224,6 +292,8 @@ void EthercatDeviceConfigurator::parseFile(std::string path) {
 
         if (type_str == "Elmo") {
           entry.type = EthercatSlaveType::Elmo;
+        } else if (type_str == "MPSDrive") {
+          entry.type = EthercatSlaveType::MPSDrive;
         } else if (type_str == "Maxon") {
           entry.type = EthercatSlaveType::Maxon;
         } else if (type_str == "Anydrive") {
@@ -246,7 +316,6 @@ void EthercatDeviceConfigurator::parseFile(std::string path) {
 
       // configuration_file - entry
       if (child["configuration_file"]) {
-        entry.has_config_file = true;
         entry.config_file_path = child["configuration_file"].as<std::string>();
       } else {
         throw std::runtime_error("[EthercatDeviceConfigurator] Node: " + child.Tag() + " has no entry configuration_file");
@@ -296,6 +365,14 @@ void EthercatDeviceConfigurator::setup(bool startup) {
 #else
         throw std::runtime_error("elmo_ethercat_sdk not availabe.");
 #endif
+      } break;
+      case EthercatSlaveType::MPSDrive: {
+#ifdef _MPSDRIVE_FOUND_
+        std::string configuration_file_path = handleFilePath(entry.config_file_path, m_setup_file_path);
+        slave = mps_ethercat_sdk::MPSDrive::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address);
+#else
+        throw std::runtime_error("mps_ethercat_sdk configured in ethercat setup.yaml but dependency not found.");
+#endif
 
       } break;
       case EthercatSlaveType::Maxon: {
@@ -334,7 +411,7 @@ void EthercatDeviceConfigurator::setup(bool startup) {
                                                                                     pdo);
         }
 #else
-        throw std::runtime_error("anydrive_ethercat_sdk not available");
+        throw std::runtime_error("anydrive_sdk configured in ethercat setup.yaml but dependency not found.");
 #endif
       } break;
 
@@ -366,7 +443,7 @@ void EthercatDeviceConfigurator::setup(bool startup) {
                                                                                          entry.ethercat_address, pdo);
         }
 #else
-        throw std::runtime_error("rokubimini_ethercat_sdk not available");
+        throw std::runtime_error("rokubimini_ethercat_sdk configured in ethercat setup.yaml but dependency not found.");
 #endif
       } break;
 
@@ -378,8 +455,15 @@ void EthercatDeviceConfigurator::setup(bool startup) {
     m_slave_to_entry_map.insert({slave, entry});
   }
 
-  // Create master for each bus needed
+  // Create the defined master
+  for (const auto& master_config : m_master_configurations) {
+    std::shared_ptr<ecat_master::EthercatMaster> master = std::make_shared<ecat_master::EthercatMaster>();
+    master->loadEthercatMasterConfiguration(master_config);
+    m_masters.push_back(master);
+  }
 
+  // Add the slave to the masters, throws if there is not a suited master or if there is a master without slaves
+  // (this adds a cross check to the yaml file)
   for (auto& slave : m_slaves) {
     // Find entry object for each slave because the slave base class does not provide info about the interface name
     EthercatSlaveEntry entry = m_slave_to_entry_map[slave];
@@ -400,18 +484,8 @@ void EthercatDeviceConfigurator::setup(bool startup) {
 
     // No we create new master
     if (!master_found) {
-      std::shared_ptr<ecat_master::EthercatMaster> master = std::make_shared<ecat_master::EthercatMaster>();
-
-      m_master_configuration.networkInterface = entry.ethercat_bus;
-      master->loadEthercatMasterConfiguration(m_master_configuration);
-
-      m_masters.push_back(master);
-
-      // And attach the slave
-      if (!master->attachDevice(slave)) {
-        throw std::runtime_error("[EthercatDeviceConfigurator] could not attach slave: " + slave->getName() +
-                                 " to master on interface: " + master->getConfiguration().networkInterface);
-      }
+      throw std::runtime_error("[EthercatDeviceConfigurator] No master found for slave " + slave->getName() +
+                               " check if ethercat bus matches in yaml file");
     }
   }
 

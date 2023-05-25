@@ -27,17 +27,17 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
     <url type="website">https://github.com/leggedrobotics/ethercat_device_configurator</url>
 
     <buildtool_depend>catkin</buildtool_depend>
-
-    <depend>param_io</depend>
     <depend>ethercat_sdk_master</depend>
-
+    <depend>yaml-cpp</depend>
+    <depend>param_io</depend>
     <!-->
       Optional dependencies.
       Any single drive sdk or any combination of sdks may be used.
     <-->
       <depend>anydrive_rsl</depend>
-      <!-- <depend>elmo_ethercat_sdk</depend>
-      <depend>maxon_epos_ethercat_sdk</depend> -->
+      <depend>elmo_ethercat_sdk</depend>
+      <depend>mps_ethercat_sdk</depend>
+      <depend>maxon_epos_ethercat_sdk</depend>
       <depend>rokubimini_rsl_ethercat</depend>
 
     </package>
