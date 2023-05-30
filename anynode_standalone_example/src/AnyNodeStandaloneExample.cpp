@@ -26,7 +26,7 @@ bool AnyNodeStandaloneExample::init() {
   configurator_->initializeFromParameters(params);
 
   for (auto& master : configurator_->getMasters()) {
-    if (!master->startup()) {
+    if (!master->startup(false)) {
       std::cerr << "Startup not successful." << std::endl;
       return false;
     }
@@ -34,7 +34,7 @@ bool AnyNodeStandaloneExample::init() {
 
   any_worker::WorkerOptions ethercatMasterOptions;
   ethercatMasterOptions.callback_ = std::bind(&AnyNodeStandaloneExample::updateEthercatMaster, this, std::placeholders::_1);
-  ethercatMasterOptions.defaultPriority_ = 0;  // this has low priority
+  ethercatMasterOptions.defaultPriority_ = 48;
   ethercatMasterOptions.name_ = "AnyNodeStandaloneExample::updateEthercatMaster";
   ethercatMasterOptions.timeStep_ = std::numeric_limits<double>::infinity();
   if (!this->addWorker(ethercatMasterOptions)) {
@@ -64,16 +64,27 @@ void AnyNodeStandaloneExample::cleanup() {
 
 bool AnyNodeStandaloneExample::updateEthercatMaster(const any_worker::WorkerEvent& event) {
   MELO_INFO(" ")
-  bool rtSuccess = true;
-  for (const auto& master : configurator_->getMasters()) {
-    rtSuccess &= master->setRealtimePriority(99);
+  for (auto& master : configurator_->getMasters()) {
+    if (!master->activate()) {
+      std::cerr << "activation not successful." << std::endl;
+      return false;
+    } else {
+      MELO_INFO_STREAM("[EthercatDeviceConfiguratorExample] Activated the Bus: " << master->getBusPtr()->getName())
+    }
   }
-  std::cout << "Setting RT Priority: " << (rtSuccess ? "successful." : "not successful. Check user privileges.") << std::endl;
 
   while (!abrt_) {
     for (const auto& master : configurator_->getMasters()) {
-      master->update(ecat_master::UpdateMode::StandaloneEnforceRate);  // TODO fix the rate compensation (Elmo
-                                                                       // reliability problem)!!
+      master->update(ecat_master::UpdateMode::StandaloneEnforceRate);
+    }
+  }
+
+  for (auto& master : configurator_->getMasters()) {
+    if (!master->deactivate()) {
+      std::cerr << "deactivation not successful." << std::endl;
+      return false;
+    } else {
+      MELO_INFO_STREAM("[EthercatDeviceConfiguratorExample] Deactivated the Bus: " << master->getBusPtr()->getName())
     }
   }
 
