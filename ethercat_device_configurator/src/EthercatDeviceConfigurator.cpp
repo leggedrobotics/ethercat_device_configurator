@@ -66,11 +66,9 @@ static bool path_exists(std::string& path) {
 #endif
 }
 
-EthercatDeviceConfigurator::EthercatDeviceConfigurator() {
-  MELO_DEBUG("[EthercatDeviceConfigurator] Parsing and setup finished");
-}
 
 void EthercatDeviceConfigurator::initializeFromFile(std::string path, bool startup) {
+  m_setup_file_path = path;
   parseFile(path);
   setup(startup);
 }
@@ -285,7 +283,7 @@ void EthercatDeviceConfigurator::parseFile(std::string path) {
     // Iterate through child nodes
     for (YAML::const_iterator it = nodes.begin(); it != nodes.end(); ++it) {
       const YAML::Node& child = *it;
-      EthercatSlaveEntry entry;
+      EthercatSlaveEntry entry{};
       // type - entry
       if (child["type"]) {
         auto type_str = child["type"].as<std::string>();
@@ -317,6 +315,7 @@ void EthercatDeviceConfigurator::parseFile(std::string path) {
       // configuration_file - entry
       if (child["configuration_file"]) {
         entry.config_file_path = child["configuration_file"].as<std::string>();
+        entry.has_config_file = true;
       } else {
         throw std::runtime_error("[EthercatDeviceConfigurator] Node: " + child.Tag() + " has no entry configuration_file");
       }

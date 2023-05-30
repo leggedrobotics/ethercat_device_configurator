@@ -38,22 +38,22 @@ class EthercatDeviceConfigurator {
   enum class EthercatSlaveType { Elmo, MPSDrive, Maxon, Anydrive, Rokubi, NA };
 
   struct EthercatSlaveEntry {
-    EthercatSlaveType type;
-    std::string name;
-    bool has_config_file;
-    std::string config_file_path;
-    XmlRpc::XmlRpcValue config_params;
+    EthercatSlaveType type{EthercatSlaveType::Anydrive};
+    std::string name{};
+    bool has_config_file{false};
+    std::string config_file_path{};
+    XmlRpc::XmlRpcValue config_params{};
 
-    uint32_t ethercat_address;
-    std::string ethercat_bus;
-    std::string ethercat_pdo_type;
+    uint32_t ethercat_address{0}; //default is invalid address.
+    std::string ethercat_bus{};
+    std::string ethercat_pdo_type{};
   };
   /**
    * @brief EthercatDeviceConfigurator
    * @param path - path to the setup.yaml
    * @param startup - if true -> calls startup on all masters
    */
-  EthercatDeviceConfigurator();
+  EthercatDeviceConfigurator() = default;
 
   /**
    * @brief initialize

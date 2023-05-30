@@ -66,7 +66,7 @@ foreach(sdk ${PACKAGE_DEPENDENCIES})
   message("Found EtherCAT device sdk: " ${sdk})
 endforeach()
 
-LIST(APPEND PACKAGE_DEPENDENCIES ethercat_sdk_master)
+LIST(APPEND PACKAGE_DEPENDENCIES)
 
 catkin_package(
         INCLUDE_DIRS
