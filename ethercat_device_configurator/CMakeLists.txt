@@ -39,15 +39,15 @@ find_package(anydrive_rsl QUIET)
 find_package(elmo_ethercat_sdk QUIET)
 find_package(mps_ethercat_sdk QUIET)
 find_package(maxon_epos_ethercat_sdk QUIET)
-find_package(rokubimini_rsl_ethercat QUIET)
+find_package(rokubimini_rsl_ethercat_slave QUIET)
 
 if(anydrive_rsl_FOUND)
   add_definitions(-D_ANYDRIVE_FOUND_)
   LIST(APPEND PACKAGE_DEPENDENCIES anydrive_rsl)
 endif()
-if(rokubimini_rsl_ethercat_FOUND)
+if(rokubimini_rsl_ethercat_slave_FOUND)
   add_definitions(-D_ROKUBI_FOUND_)
-  LIST(APPEND PACKAGE_DEPENDENCIES rokubimini_rsl_ethercat)
+  LIST(APPEND PACKAGE_DEPENDENCIES rokubimini_rsl_ethercat_slave)
 endif()
 if(elmo_ethercat_sdk_FOUND)
   add_definitions(-D_ELMO_FOUND_)
@@ -82,7 +82,7 @@ include_directories(
         ${elmo_ethercat_sdk_INCLUDE_DIRS}
         ${mps_ethercat_sdk_INCLUDE_DIRS}
         ${maxon_epos_ethercat_sdk_INCLUDE_DIRS}
-        ${rokubimini_rsl_ethercat_INCLUDE_DIRS}
+        ${rokubimini_rsl_ethercat_slave_INCLUDE_DIRS}
         ${catkin_LIBRARIES}
 
 )
@@ -104,7 +104,7 @@ target_link_libraries(
         ${elmo_ethercat_sdk_LIBRARIES}
         ${mps_ethercat_sdk_LIBRARIES}
         ${maxon_epos_ethercat_sdk_LIBRARIES}
-        ${rokubimini_rsl_ethercat_LIBRARIES}
+        ${rokubimini_rsl_ethercat_slave_LIBRARIES}
         ${YAML_CPP_LIBRARIES}
         stdc++fs
 )
@@ -119,7 +119,7 @@ add_dependencies(
         standalone
         ${PROJECT_NAME}
         ${anydrive_rsl_EXPORTED_TARGETS}
-        ${rokubimini_rsl_ethercat_EXPORTED_TARGETS}
+        ${rokubimini_rsl_ethercat_slave_EXPORTED_TARGETS}
         ${elmo_ethercat_sdk_EXPORTED_TARGETS}
         ${mps_ethercat_sdk_EXPORTED_TARGETS}
         ${maxon_epos_ethercat_sdk_EXPORTED_TARGETS}
@@ -134,7 +134,7 @@ target_link_libraries(
         ${elmo_ethercat_sdk_LIBRARIES}
         ${mps_ethercat_sdk_LIBRARIES}
         ${maxon_epos_ethercat_sdk_LIBRARIES}
-        ${rokubimini_rsl_ethercat_LIBRARIES}
+        ${rokubimini_rsl_ethercat_slave_LIBRARIES}
         ${YAML_CPP_LIBRARIES}
         -pthread
         stdc++fs

@@ -45,7 +45,7 @@
 
 /*Bota rokubi and SenseOne sensors*/
 #ifdef _ROKUBI_FOUND_
-#include "rokubimini_rsl_ethercat/RokubiminiEthercat.hpp"
+#include "rokubimini_rsl_ethercat_slave/RokubiminiEthercat.hpp"
 #endif
 
 /*yaml-cpp*/
@@ -65,7 +65,6 @@ static bool path_exists(std::string& path) {
   return std::filesystem::exists(path);
 #endif
 }
-
 
 void EthercatDeviceConfigurator::initializeFromFile(std::string path, bool startup) {
   m_setup_file_path = path;
