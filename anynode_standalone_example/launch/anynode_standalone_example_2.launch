@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<launch>
-  <rosparam command="load" ns="anynode_standalone_example_2" file="$(find anynode_standalone_example)/config/params_2.yaml"/>
-
-  <!-- Launch the lowlevel controller -->
-  <node pkg="anynode_standalone_example" type="anynode_standalone_example_node" name="anynode_standalone_example_2" output="screen" launch-prefix=""/>
-
-</launch>

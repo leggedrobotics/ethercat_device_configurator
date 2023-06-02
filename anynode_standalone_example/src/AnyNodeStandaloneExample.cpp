@@ -25,16 +25,15 @@ bool AnyNodeStandaloneExample::init() {
   configurator_ = std::make_shared<EthercatDeviceConfigurator>();
   configurator_->initializeFromParameters(params);
 
-  for (auto& master : configurator_->getMasters()) {
-    if (!master->startup()) {
-      std::cerr << "Startup not successful." << std::endl;
-      return false;
-    }
-  }
+  any_worker::WorkerOptions startupWorkerOptions;
+  startupWorkerOptions.callback_ = std::bind(&AnyNodeStandaloneExample::startupWorker, this, std::placeholders::_1);
+  startupWorkerOptions.name_ = "AnyNodeStandaloneExample::startupWorker";
+  startupWorkerOptions.timeStep_ = std::numeric_limits<double>::infinity();  // will terminate when startup complete or aborted.
+  this->addWorker(startupWorkerOptions);
 
   any_worker::WorkerOptions ethercatMasterOptions;
   ethercatMasterOptions.callback_ = std::bind(&AnyNodeStandaloneExample::updateEthercatMaster, this, std::placeholders::_1);
-  ethercatMasterOptions.defaultPriority_ = 0;  // this has low priority
+  ethercatMasterOptions.defaultPriority_ = 39;
   ethercatMasterOptions.name_ = "AnyNodeStandaloneExample::updateEthercatMaster";
   ethercatMasterOptions.timeStep_ = std::numeric_limits<double>::infinity();
   if (!this->addWorker(ethercatMasterOptions)) {
@@ -47,12 +46,11 @@ bool AnyNodeStandaloneExample::init() {
 
 void AnyNodeStandaloneExample::preCleanup() {
   MELO_INFO_STREAM(" ");
+  abortStartup_ = true;
   for (const auto& master : configurator_->getMasters()) {
-    master->preShutdown();
+    master->preShutdown(true);
   }
-  std::this_thread::sleep_for(std::chrono::milliseconds(200));
   abrt_ = true;
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));
 }
 
 void AnyNodeStandaloneExample::cleanup() {
@@ -62,18 +60,35 @@ void AnyNodeStandaloneExample::cleanup() {
   }
 }
 
-bool AnyNodeStandaloneExample::updateEthercatMaster(const any_worker::WorkerEvent& event) {
-  MELO_INFO(" ")
-  bool rtSuccess = true;
-  for (const auto& master : configurator_->getMasters()) {
-    rtSuccess &= master->setRealtimePriority(99);
+bool AnyNodeStandaloneExample::startupWorker(const any_worker::WorkerEvent& event) {
+  for (auto& master : configurator_->getMasters()) {
+    if (master->startup(abortStartup_)) {
+      startComplete_ = true;
+    } else {
+      std::cerr << "Startup not successful." << std::endl;
+      return false;
+    }
   }
-  std::cout << "Setting RT Priority: " << (rtSuccess ? "successful." : "not successful. Check user privileges.") << std::endl;
+  return true;
+}
 
-  while (!abrt_) {
+bool AnyNodeStandaloneExample::updateEthercatMaster(const any_worker::WorkerEvent& event) {
+  while (!abortStartup_) {  // use a conditional variable or atomic_flag_wait_for or something more smart..
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    if (startComplete_) {
+      break;
+    }
+  }
+
+  if (startComplete_) {
     for (const auto& master : configurator_->getMasters()) {
-      master->update(ecat_master::UpdateMode::StandaloneEnforceRate);  // TODO fix the rate compensation (Elmo
-                                                                       // reliability problem)!!
+      master->activate();
+    }
+
+    while (!abrt_) {
+      for (const auto& master : configurator_->getMasters()) {
+        master->update(ecat_master::UpdateMode::StandaloneEnforceRate);
+      }
     }
   }
 

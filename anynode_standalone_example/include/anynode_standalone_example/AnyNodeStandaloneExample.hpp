@@ -25,9 +25,13 @@ class AnyNodeStandaloneExample : public any_node::Node {
 
   bool updateEthercatMaster(const any_worker::WorkerEvent& event);
 
+  bool startupWorker(const any_worker::WorkerEvent& event);
+
  protected:
   EthercatDeviceConfigurator::SharedPtr configurator_;
-  bool abrt_{false};
+  std::atomic<bool> abrt_{false};
+  std::atomic<bool> startComplete_{false};
+  std::atomic<bool> abortStartup_{false};
 };
 
 } /* namespace anynode_standalone_example */

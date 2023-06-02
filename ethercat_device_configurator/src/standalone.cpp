@@ -137,11 +137,11 @@ class ExampleEcatHardwareInterface {
     // other operations can be performed in between. when the bus is directly put into OP state with startup(true) a watchdog on the slave
     // is started which checks if cyclic PDO is happening, if this communication is not started fast enough the drive goes into an error
     // state.
-    if (ecatMaster_->startup(false)) {
+    if (ecatMaster_->startup(startupAbortFlag_)) {
       MELO_INFO_STREAM("[EthercatDeviceConfiguratorExample] Successfully started Ethercat Master on Network Interface: "
                        << ecatMaster_->getBusPtr()->getName());
     } else {
-      MELO_FATAL_STREAM("[EthercatDeviceConfiguratorExample] Could not start the Ethercat Master.")
+      MELO_ERROR_STREAM("[EthercatDeviceConfiguratorExample] Could not start the Ethercat Master.")
       return false;
     }
 
@@ -314,6 +314,8 @@ class ExampleEcatHardwareInterface {
     MELO_INFO_STREAM("[EthercatDeviceConfiguratorExample] Fully shutdown.")
   }
 
+  void abortStartup() { startupAbortFlag_ = true; }
+
   ~ExampleEcatHardwareInterface() {
     // if no signal handler is used - we can do this in the destructor.
     MELO_INFO_STREAM("[EthercatDeviceConfiguratorExample] Destructor.")
@@ -347,6 +349,7 @@ class ExampleEcatHardwareInterface {
 
   std::unique_ptr<std::thread> workerThread_;
   std::unique_ptr<std::thread> userCyclicThread_;
+  std::atomic<bool> startupAbortFlag_{false};
   std::atomic<bool> abrtFlag_{false};
   std::atomic<bool> userInteraction_{true};
 };
@@ -383,9 +386,12 @@ int main(int argc, char** argv) {
   }
 
   example::ExampleEcatHardwareInterface exampleEcatHardwareInterface{};
+  std::atomic<bool> shutdownFlag{false};
 
-  example::SimpleSignalHandler::addSigIntCallback(
-      [&exampleEcatHardwareInterface]([[maybe_unused]] int signal) { exampleEcatHardwareInterface.shutdown(); });
+  example::SimpleSignalHandler::addSigIntCallback([&shutdownFlag, &exampleEcatHardwareInterface]([[maybe_unused]] int signal) {
+    exampleEcatHardwareInterface.abortStartup();
+    shutdownFlag = true;
+  });
 
   example::SimpleSignalHandler::registerSignalHandler();
 
@@ -394,8 +400,14 @@ int main(int argc, char** argv) {
     exampleEcatHardwareInterface.someUserStartInteraction();
     exampleEcatHardwareInterface.cyclicUserInteraction();
   }
-  // nothing further to do in this thread.
-  pause();
-
+  // nothing further to do in this thread, so we wait till we receive a shutdown signal s.t later the exmpaleEcatHArdwareInterface can be
+  // nicely shutdown the shutdown method should NOT be in the signal handler because the signal handler has to be lock-free, otherwise UB.
+  // https://en.cppreference.com/w/cpp/utility/program/signal
+  MELO_INFO_STREAM("[Main Thread] started waiting...")
+  while (!shutdownFlag) {  // could be replaced with smarter stuff like a conditional variable
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+  }
+  MELO_INFO_STREAM("[Main Thread] stopped waiting... shut down.. ")
+  exampleEcatHardwareInterface.shutdown();
   return 0;
 }

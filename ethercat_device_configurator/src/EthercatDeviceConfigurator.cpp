@@ -116,10 +116,11 @@ void EthercatDeviceConfigurator::parseParameter(XmlRpc::XmlRpcValue& params) {
     XmlRpc::XmlRpcValue ethercatMastersParam = param_io::getMember<XmlRpc::XmlRpcValue>(params, "ethercat_master_s");
     for (auto& ethercatMasterParam : ethercatMastersParam) {
       ecat_master::EthercatMasterConfiguration masterConfiguration{};
-      if (ethercatMasterParam.second.hasMember("name")) {
-        masterConfiguration.name = param_io::getMember<std::string>(ethercatMasterParam.second, "name");
-      }
-      MELO_INFO_STREAM("[EthercatDeviceConfigurator] Found master: " << masterConfiguration.name);
+      masterConfiguration.name = ethercatMasterParam.first;
+      //      if (ethercatMasterParam.second.hasMember("name")) {
+      //        masterConfiguration.name = param_io::getMember<std::string>(ethercatMasterParam.second, "name");
+      //      }
+      //      MELO_INFO_STREAM("[EthercatDeviceConfigurator] Found master: " << masterConfiguration.name);
       if (ethercatMasterParam.second.hasMember("ethercat_bus")) {
         masterConfiguration.networkInterface = param_io::getMember<std::string>(ethercatMasterParam.second, "ethercat_bus");
       }
@@ -128,7 +129,13 @@ void EthercatDeviceConfigurator::parseParameter(XmlRpc::XmlRpcValue& params) {
       }
       if (ethercatMasterParam.second.hasMember("update_rate_too_low_warn_threshold")) {
         masterConfiguration.updateRateTooLowWarnThreshold =
-            param_io::getMember<double>(ethercatMasterParam.second, "update_rate_too_low_warn_threshold");
+            param_io::getMember<int>(ethercatMasterParam.second, "update_rate_too_low_warn_threshold");
+      }
+      if (ethercatMasterParam.second.hasMember("pdo_size_check")) {
+        masterConfiguration.pdoSizeCheck = param_io::getMember<bool>(ethercatMasterParam.second, "pdo_size_check");
+      }
+      if (ethercatMasterParam.second.hasMember("slave_discover_retries")) {
+        masterConfiguration.slaveDiscoverRetries = param_io::getMember<int>(ethercatMasterParam.second, "slave_discover_retries");
       }
       if (ethercatMasterParam.second.hasMember("bus_diagnosis")) {
         masterConfiguration.doBusDiagnosis = param_io::getMember<bool>(ethercatMasterParam.second, "bus_diagnosis");
@@ -149,7 +156,7 @@ void EthercatDeviceConfigurator::parseParameter(XmlRpc::XmlRpcValue& params) {
       m_master_configurations.push_back(masterConfiguration);
     }
   } else {
-    throw std::runtime_error("[EthercatDeviceConfigurator] Node ethercat_master is missing in parameter");
+    throw std::runtime_error("[EthercatDeviceConfigurator] Node ethercat_master_s is missing in parameter");
   }
 
   if (params.hasMember("ethercat_devices")) {
@@ -246,6 +253,16 @@ void EthercatDeviceConfigurator::parseFile(std::string path) {
         masterConfiguration.updateRateTooLowWarnThreshold = ecat_master_node["update_rate_too_low_warn_threshold"].as<int>();
       } else {
         throw std::runtime_error("[EthercatDeviceConfigurator] Node update_rate_too_low_warn_threshold missing in ethercat_master");
+      }
+      if (ecat_master_node["pdo_size_check"]) {
+        masterConfiguration.pdoSizeCheck = ecat_master_node["pdo_size_check"].as<bool>();
+      } else {
+        throw std::runtime_error("[EthercatDeviceConfigurator] Node pdo_size_check missing in ethercat_master");
+      }
+      if (ecat_master_node["slave_discover_retries"]) {
+        masterConfiguration.slaveDiscoverRetries = ecat_master_node["slave_discover_retries"].as<unsigned int>();
+      } else {
+        throw std::runtime_error("[EthercatDeviceConfigurator] Node slave_discover_retries missing in ethercat_master");
       }
       if (ecat_master_node["bus_diagnosis"]) {
         masterConfiguration.doBusDiagnosis = ecat_master_node["bus_diagnosis"].as<bool>();
@@ -490,7 +507,7 @@ void EthercatDeviceConfigurator::setup(bool startup) {
   if (startup) {
     for (auto& master : m_masters) {
       MELO_DEBUG("Starting master on: " + master->getConfiguration().networkInterface)
-      if (!master->startup()) {
+      if (!master->startup()) {  // no abort when started like this..
         throw std::runtime_error("[EthercatDeviceConfigurator] could not start master on interface: " +
                                  master->getConfiguration().networkInterface);
       }
