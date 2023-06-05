@@ -66,6 +66,11 @@ static bool path_exists(std::string& path) {
 #endif
 }
 
+EthercatDeviceConfigurator::EthercatDeviceConfigurator(std::string path, bool startup) : m_setup_file_path(path) {
+  parseFile(path);
+  setup(startup);
+}
+
 void EthercatDeviceConfigurator::initializeFromFile(std::string path, bool startup) {
   m_setup_file_path = path;
   parseFile(path);

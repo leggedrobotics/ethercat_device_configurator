@@ -54,6 +54,7 @@ class EthercatDeviceConfigurator {
    * @param startup - if true -> calls startup on all masters
    */
   EthercatDeviceConfigurator() = default;
+  explicit EthercatDeviceConfigurator(std::string path, bool startup = false);
 
   /**
    * @brief initialize

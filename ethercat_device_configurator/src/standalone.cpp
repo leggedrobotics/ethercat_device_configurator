@@ -265,13 +265,13 @@ class ExampleEcatHardwareInterface {
         for (auto& maxon : maxons_) {
           if (maxon->lastPdoStateChangeSuccessful() && maxon->getReading().getDriveState() == maxon::DriveState::OperationEnabled) {
             maxon::Command command;
-            command.setModeOfOperation(maxon::ModeOfOperationEnum::CyclicSynchronousTorqueMode);
+            command.setModeOfOperation(maxon::ModeOfOperationEnum::CyclicSynchronousTorqueMode);  // todo torque mode with positon command?
             auto reading = maxon->getReading();
             command.setTargetPosition(reading.getActualPosition() + 10);
             maxon->stageCommand(command);
           } else {
             MELO_WARN_STREAM("[EthercatDeviceConfiguratorExample] Maxon not in operationEnabled state: "
-                             << maxon_slave_ptr->getName() << "': " << maxon_slave_ptr->getReading().getDriveState());
+                             << maxon->getName() << "': " << maxon->getReading().getDriveState());
           }
         }
 #endif
