@@ -22,7 +22,7 @@ if(CCACHE_PROGRAM)
 endif()
 
 set(CMAKE_CXX_STANDARD 17)
-add_definitions(-Wall -Werror)
+add_definitions(-Wall -Werror -Wextra)
 add_definitions(-DMELO_USE_COUT)
 
 
@@ -30,19 +30,19 @@ find_package(yaml-cpp REQUIRED)
 find_package(ament_cmake REQUIRED)
 find_package(ethercat_sdk_master REQUIRED)
 
-find_package(anydrive QUIET)
+find_package(anydrive_rsl QUIET)
 find_package(elmo_ethercat_sdk QUIET)
 find_package(mps_ethercat_sdk QUIET)
 find_package(maxon_epos_ethercat_sdk QUIET)
-find_package(rokubimini_rsl_ethercat QUIET)
+find_package(rokubimini_rsl_ethercat_slave QUIET)
 
-if(anydrive_FOUND)
+if(anydrive_rsl_FOUND)
   add_definitions(-D_ANYDRIVE_FOUND_)
-  LIST(APPEND PACKAGE_DEPENDENCIES anydrive)
+  LIST(APPEND PACKAGE_DEPENDENCIES anydrive_rsl)
 endif()
-if(rokubimini_rsl_ethercat_FOUND)
+if(rokubimini_rsl_ethercat_slave_FOUND)
   add_definitions(-D_ROKUBI_FOUND_)
-  LIST(APPEND PACKAGE_DEPENDENCIES rokubimini_rsl_ethercat)
+  LIST(APPEND PACKAGE_DEPENDENCIES rokubimini_rsl_ethercat_slave)
 endif()
 if(elmo_ethercat_sdk_FOUND)
   add_definitions(-D_ELMO_FOUND_)
@@ -91,11 +91,11 @@ target_link_libraries(
 )
 
 install(
-    TARGETS ${PROJECT_NAME}
+    TARGETS ${PROJECT_NAME} standalone
     EXPORT ${PROJECT_NAME}_export
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
-    RUNTIME DESTINATION lib/${PROJECT_NAME}
+    RUNTIME DESTINATION bin
     INCLUDES DESTINATION include
 )
 
@@ -103,19 +103,13 @@ install(
     DIRECTORY include/
     DESTINATION include
 )
-
-install(
-    TARGETS standalone
-    DESTINATION lib/${PROJECT_NAME}
-)
-
 install( #requries rebuild if changes made in src folder --> enable sym-link install in colcon.
     DIRECTORY example_config/
-    DESTINATION share/${PROJECT_NAME}
+    DESTINATION bin
 )
 
 ament_export_dependencies(${PACKAGE_DEPENDENCIES})
-ament_export_targets(${PROJECT_NAME}_export)
+ament_export_targets(${PROJECT_NAME}_export HAS_LIBRARY_TARGET)
 # ament_export_include_directories(include)
 
 
