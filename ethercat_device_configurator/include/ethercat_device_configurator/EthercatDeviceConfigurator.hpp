@@ -27,7 +27,7 @@
 #include <type_traits>
 #include "ethercat_sdk_master/EthercatMaster.hpp"
 
-#include <xmlrpcpp/XmlRpc.h>
+// #include <xmlrpcpp/XmlRpc.h>
 
 class EthercatDeviceConfigurator {
  public:
@@ -42,7 +42,7 @@ class EthercatDeviceConfigurator {
     std::string name{};
     bool has_config_file{false};
     std::string config_file_path{};
-    XmlRpc::XmlRpcValue config_params{};
+    //    XmlRpc::XmlRpcValue config_params{};
 
     uint32_t ethercat_address{0}; //default is invalid address.
     std::string ethercat_bus{};
@@ -65,7 +65,7 @@ class EthercatDeviceConfigurator {
    * @brief initialize
    * @param params - params with the slave informations
    */
-  void initializeFromParameters(XmlRpc::XmlRpcValue& params, bool startup = false);
+  //  void initializeFromParameters(XmlRpc::XmlRpcValue& params, bool startup = false);
   /**
    * @brief getMasters
    * @return a vector of all masters
@@ -169,7 +169,7 @@ class EthercatDeviceConfigurator {
    * m_master_configuration (without the bus interface)
    * @param path
    */
-  void parseParameter(XmlRpc::XmlRpcValue& params);
+  //  void parseParameter(XmlRpc::XmlRpcValue& params);
   /**
    * @brief setup - uses the m_slave_entries to create slaves and bus masters. Attaches the slaves to the bus master. Can startup the bus
    * @param startup - true: call startup for all busses

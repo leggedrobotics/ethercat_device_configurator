@@ -21,7 +21,7 @@
  */
 
 #include "ethercat_device_configurator/EthercatDeviceConfigurator.hpp"
-#include <param_io/get_param.hpp>
+// #include <param_io/get_param.hpp>
 
 /*Anydrives*/
 #ifdef _ANYDRIVE_FOUND_
@@ -77,10 +77,10 @@ void EthercatDeviceConfigurator::initializeFromFile(std::string path, bool start
   setup(startup);
 }
 
-void EthercatDeviceConfigurator::initializeFromParameters(XmlRpc::XmlRpcValue& params, bool startup) {
-  parseParameter(params);
-  setup(startup);
-}
+// void EthercatDeviceConfigurator::initializeFromParameters(XmlRpc::XmlRpcValue& params, bool startup) {
+//   parseParameter(params);
+//   setup(startup);
+// }
 
 std::vector<std::shared_ptr<ecat_master::EthercatMaster>> EthercatDeviceConfigurator::getMasters() {
   return m_masters;
@@ -114,118 +114,118 @@ std::shared_ptr<ecat_master::EthercatMaster> EthercatDeviceConfigurator::master(
 const std::string& EthercatDeviceConfigurator::getSetupFilePath() {
   return m_setup_file_path;
 }
-
-void EthercatDeviceConfigurator::parseParameter(XmlRpc::XmlRpcValue& params) {
-  // Ethercat master configuration
-  if (params.hasMember("ethercat_master_s")) {
-    XmlRpc::XmlRpcValue ethercatMastersParam = param_io::getMember<XmlRpc::XmlRpcValue>(params, "ethercat_master_s");
-    for (auto& ethercatMasterParam : ethercatMastersParam) {
-      ecat_master::EthercatMasterConfiguration masterConfiguration{};
-      masterConfiguration.name = ethercatMasterParam.first;
-      //      if (ethercatMasterParam.second.hasMember("name")) {
-      //        masterConfiguration.name = param_io::getMember<std::string>(ethercatMasterParam.second, "name");
-      //      }
-      //      MELO_INFO_STREAM("[EthercatDeviceConfigurator] Found master: " << masterConfiguration.name);
-      if (ethercatMasterParam.second.hasMember("ethercat_bus")) {
-        masterConfiguration.networkInterface = param_io::getMember<std::string>(ethercatMasterParam.second, "ethercat_bus");
-      }
-      if (ethercatMasterParam.second.hasMember("time_step")) {
-        masterConfiguration.timeStep = param_io::getMember<double>(ethercatMasterParam.second, "time_step");
-      }
-      if (ethercatMasterParam.second.hasMember("update_rate_too_low_warn_threshold")) {
-        masterConfiguration.updateRateTooLowWarnThreshold =
-            param_io::getMember<int>(ethercatMasterParam.second, "update_rate_too_low_warn_threshold");
-      }
-      if (ethercatMasterParam.second.hasMember("pdo_size_check")) {
-        masterConfiguration.pdoSizeCheck = param_io::getMember<bool>(ethercatMasterParam.second, "pdo_size_check");
-      }
-      if (ethercatMasterParam.second.hasMember("slave_discover_retries")) {
-        masterConfiguration.slaveDiscoverRetries = param_io::getMember<int>(ethercatMasterParam.second, "slave_discover_retries");
-      }
-      if (ethercatMasterParam.second.hasMember("bus_diagnosis")) {
-        masterConfiguration.doBusDiagnosis = param_io::getMember<bool>(ethercatMasterParam.second, "bus_diagnosis");
-      }
-      if (ethercatMasterParam.second.hasMember("error_counter_log")) {
-        masterConfiguration.logErrorCounters = param_io::getMember<bool>(ethercatMasterParam.second, "error_counter_log");
-        if (masterConfiguration.doBusDiagnosis && !masterConfiguration.logErrorCounters) {
-          throw std::runtime_error("[EthercatDeviceConfigurator] Bus diagnosis has to be enabled to log the error counters.");
-        }
-      }
-      for (const auto& master_config : m_master_configurations) {  // check all previous master config for duplicate bus. throw.
-        if (master_config.networkInterface == masterConfiguration.networkInterface) {
-          throw std::runtime_error(
-              "[EthercatDeviceConfigurator] Two master configurations with the same interface / ethercatbus name defined. Check "
-              "Parameters");
-        }
-      }
-      m_master_configurations.push_back(masterConfiguration);
-    }
-  } else {
-    throw std::runtime_error("[EthercatDeviceConfigurator] Node ethercat_master_s is missing in parameter");
-  }
-
-  if (params.hasMember("ethercat_devices")) {
-    XmlRpc::XmlRpcValue deviceParams = param_io::getMember<XmlRpc::XmlRpcValue>(params, "ethercat_devices");
-    for (auto& deviceParam : deviceParams) {
-      EthercatSlaveEntry entry;
-
-      // name - entry
-      entry.name = deviceParam.first;
-
-      if (deviceParam.second.hasMember("type")) {
-        auto type_str = param_io::getMember<std::string>(deviceParam.second, "type");
-        if (type_str == "Elmo") {
-          entry.type = EthercatSlaveType::Elmo;
-        } else if (type_str == "MPSDrive") {
-          entry.type = EthercatSlaveType::MPSDrive;
-        } else if (type_str == "Maxon") {
-          entry.type = EthercatSlaveType::Maxon;
-        } else if (type_str == "Anydrive") {
-          entry.type = EthercatSlaveType::Anydrive;
-        } else if (type_str == "Rokubi") {
-          entry.type = EthercatSlaveType::Rokubi;
-        } else {
-          throw std::runtime_error("[EthercatDeviceConfigurator] " + entry.name + " is an undefined type of ethercat device");
-        }
-      } else {
-        throw std::runtime_error("[EthercatDeviceConfigurator] Node: " + entry.name + " has no entry type");
-      }
-
-      entry.config_file_path = "";
-      entry.has_config_file = false;
-
-      if (deviceParam.second.hasMember("configuration")) {
-        entry.config_params = param_io::getMember<XmlRpc::XmlRpcValue>(deviceParam.second, "configuration");
-      }
-
-      if (entry.type == EthercatSlaveType::Rokubi) {
-        if (deviceParam.second.hasMember("configuration_file")) {
-          entry.config_file_path = param_io::getMember<std::string>(deviceParam.second, "configuration_file");
-        }
-      }
-
-      if (deviceParam.second.hasMember("communication")) {
-        XmlRpc::XmlRpcValue communicationParams = param_io::getMember<XmlRpc::XmlRpcValue>(deviceParam.second, "communication");
-        if (communicationParams.hasMember("ethercat_address")) {
-          entry.ethercat_address = param_io::getMember<int>(communicationParams, "ethercat_address");
-        }
-        if (communicationParams.hasMember("ethercat_bus")) {
-          entry.ethercat_bus = param_io::getMember<std::string>(communicationParams, "ethercat_bus");
-        }
-        // ethercat_pdo_type - entry
-        if (entry.type == EthercatSlaveType::Anydrive || entry.type == EthercatSlaveType::Rokubi) {
-          if (communicationParams.hasMember("ethercat_pdo_type")) {
-            entry.ethercat_pdo_type = param_io::getMember<std::string>(communicationParams, "ethercat_pdo_type");
-          }
-        }
-      }
-
-      m_slave_entries.push_back(entry);
-    }
-  } else {
-    throw std::runtime_error("[EthercatDeviceConfigurator] Node ethercat_devices missing in yaml");
-  }
-}
+//
+// void EthercatDeviceConfigurator::parseParameter(XmlRpc::XmlRpcValue& params) {
+//  // Ethercat master configuration
+//  if (params.hasMember("ethercat_master_s")) {
+//    XmlRpc::XmlRpcValue ethercatMastersParam = param_io::getMember<XmlRpc::XmlRpcValue>(params, "ethercat_master_s");
+//    for (auto& ethercatMasterParam : ethercatMastersParam) {
+//      ecat_master::EthercatMasterConfiguration masterConfiguration{};
+//      masterConfiguration.name = ethercatMasterParam.first;
+//      //      if (ethercatMasterParam.second.hasMember("name")) {
+//      //        masterConfiguration.name = param_io::getMember<std::string>(ethercatMasterParam.second, "name");
+//      //      }
+//      //      MELO_INFO_STREAM("[EthercatDeviceConfigurator] Found master: " << masterConfiguration.name);
+//      if (ethercatMasterParam.second.hasMember("ethercat_bus")) {
+//        masterConfiguration.networkInterface = param_io::getMember<std::string>(ethercatMasterParam.second, "ethercat_bus");
+//      }
+//      if (ethercatMasterParam.second.hasMember("time_step")) {
+//        masterConfiguration.timeStep = param_io::getMember<double>(ethercatMasterParam.second, "time_step");
+//      }
+//      if (ethercatMasterParam.second.hasMember("update_rate_too_low_warn_threshold")) {
+//        masterConfiguration.updateRateTooLowWarnThreshold =
+//            param_io::getMember<int>(ethercatMasterParam.second, "update_rate_too_low_warn_threshold");
+//      }
+//      if (ethercatMasterParam.second.hasMember("pdo_size_check")) {
+//        masterConfiguration.pdoSizeCheck = param_io::getMember<bool>(ethercatMasterParam.second, "pdo_size_check");
+//      }
+//      if (ethercatMasterParam.second.hasMember("slave_discover_retries")) {
+//        masterConfiguration.slaveDiscoverRetries = param_io::getMember<int>(ethercatMasterParam.second, "slave_discover_retries");
+//      }
+//      if (ethercatMasterParam.second.hasMember("bus_diagnosis")) {
+//        masterConfiguration.doBusDiagnosis = param_io::getMember<bool>(ethercatMasterParam.second, "bus_diagnosis");
+//      }
+//      if (ethercatMasterParam.second.hasMember("error_counter_log")) {
+//        masterConfiguration.logErrorCounters = param_io::getMember<bool>(ethercatMasterParam.second, "error_counter_log");
+//        if (masterConfiguration.doBusDiagnosis && !masterConfiguration.logErrorCounters) {
+//          throw std::runtime_error("[EthercatDeviceConfigurator] Bus diagnosis has to be enabled to log the error counters.");
+//        }
+//      }
+//      for (const auto& master_config : m_master_configurations) {  // check all previous master config for duplicate bus. throw.
+//        if (master_config.networkInterface == masterConfiguration.networkInterface) {
+//          throw std::runtime_error(
+//              "[EthercatDeviceConfigurator] Two master configurations with the same interface / ethercatbus name defined. Check "
+//              "Parameters");
+//        }
+//      }
+//      m_master_configurations.push_back(masterConfiguration);
+//    }
+//  } else {
+//    throw std::runtime_error("[EthercatDeviceConfigurator] Node ethercat_master_s is missing in parameter");
+//  }
+//
+//  if (params.hasMember("ethercat_devices")) {
+//    XmlRpc::XmlRpcValue deviceParams = param_io::getMember<XmlRpc::XmlRpcValue>(params, "ethercat_devices");
+//    for (auto& deviceParam : deviceParams) {
+//      EthercatSlaveEntry entry;
+//
+//      // name - entry
+//      entry.name = deviceParam.first;
+//
+//      if (deviceParam.second.hasMember("type")) {
+//        auto type_str = param_io::getMember<std::string>(deviceParam.second, "type");
+//        if (type_str == "Elmo") {
+//          entry.type = EthercatSlaveType::Elmo;
+//        } else if (type_str == "MPSDrive") {
+//          entry.type = EthercatSlaveType::MPSDrive;
+//        } else if (type_str == "Maxon") {
+//          entry.type = EthercatSlaveType::Maxon;
+//        } else if (type_str == "Anydrive") {
+//          entry.type = EthercatSlaveType::Anydrive;
+//        } else if (type_str == "Rokubi") {
+//          entry.type = EthercatSlaveType::Rokubi;
+//        } else {
+//          throw std::runtime_error("[EthercatDeviceConfigurator] " + entry.name + " is an undefined type of ethercat device");
+//        }
+//      } else {
+//        throw std::runtime_error("[EthercatDeviceConfigurator] Node: " + entry.name + " has no entry type");
+//      }
+//
+//      entry.config_file_path = "";
+//      entry.has_config_file = false;
+//
+//      if (deviceParam.second.hasMember("configuration")) {
+//        entry.config_params = param_io::getMember<XmlRpc::XmlRpcValue>(deviceParam.second, "configuration");
+//      }
+//
+//      if (entry.type == EthercatSlaveType::Rokubi) {
+//        if (deviceParam.second.hasMember("configuration_file")) {
+//          entry.config_file_path = param_io::getMember<std::string>(deviceParam.second, "configuration_file");
+//        }
+//      }
+//
+//      if (deviceParam.second.hasMember("communication")) {
+//        XmlRpc::XmlRpcValue communicationParams = param_io::getMember<XmlRpc::XmlRpcValue>(deviceParam.second, "communication");
+//        if (communicationParams.hasMember("ethercat_address")) {
+//          entry.ethercat_address = param_io::getMember<int>(communicationParams, "ethercat_address");
+//        }
+//        if (communicationParams.hasMember("ethercat_bus")) {
+//          entry.ethercat_bus = param_io::getMember<std::string>(communicationParams, "ethercat_bus");
+//        }
+//        // ethercat_pdo_type - entry
+//        if (entry.type == EthercatSlaveType::Anydrive || entry.type == EthercatSlaveType::Rokubi) {
+//          if (communicationParams.hasMember("ethercat_pdo_type")) {
+//            entry.ethercat_pdo_type = param_io::getMember<std::string>(communicationParams, "ethercat_pdo_type");
+//          }
+//        }
+//      }
+//
+//      m_slave_entries.push_back(entry);
+//    }
+//  } else {
+//    throw std::runtime_error("[EthercatDeviceConfigurator] Node ethercat_devices missing in yaml");
+//  }
+//}
 
 void EthercatDeviceConfigurator::parseFile(std::string path) {
   // Check if file exists
@@ -427,8 +427,9 @@ void EthercatDeviceConfigurator::setup(bool startup) {
           std::string configuration_file_path = handleFilePath(entry.config_file_path, m_setup_file_path);
           slave = anydrive_rsl::AnydriveEthercatSlave::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address, pdo);
         } else {
-          slave = anydrive_rsl::AnydriveEthercatSlave::deviceFromRosParameterServer(entry.config_params, entry.name, entry.ethercat_address,
-                                                                                    pdo);
+          //          slave = anydrive_rsl::AnydriveEthercatSlave::deviceFromRosParameterServer(entry.config_params, entry.name,
+          //          entry.ethercat_address,
+          //                                                                                    pdo);
         }
 #else
         throw std::runtime_error("anydrive_sdk configured in ethercat setup.yaml but dependency not found.");
