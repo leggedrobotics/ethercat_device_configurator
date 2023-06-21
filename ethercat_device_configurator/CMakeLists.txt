@@ -91,7 +91,7 @@ target_link_libraries(
 )
 
 install(
-    TARGETS ${PROJECT_NAME} standalone
+    TARGETS ${PROJECT_NAME}
     EXPORT ${PROJECT_NAME}_export
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
@@ -103,10 +103,16 @@ install(
     DIRECTORY include/
     DESTINATION include
 )
+
+install(
+    TARGETS standalone
+    DESTINATION lib/${PROJECT_NAME}
+)
+
 install( #requries rebuild if changes made in src folder --> enable sym-link install in colcon.
     DIRECTORY example_config/
     DESTINATION bin
-)
+    )
 
 ament_export_dependencies(${PACKAGE_DEPENDENCIES})
 ament_export_targets(${PROJECT_NAME}_export HAS_LIBRARY_TARGET)
