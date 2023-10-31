@@ -26,8 +26,6 @@ add_definitions(-Wall -Werror -Wextra)
 add_definitions(-DMELO_USE_COUT)
 
 set(PACKAGE_DEPENDENCIES
-  param_io
-  ethercat_sdk_master
 )
 
 find_package(yaml-cpp REQUIRED)
@@ -76,7 +74,9 @@ foreach (sdk ${PACKAGE_DEPENDENCIES})
   message("Found EtherCAT device sdk: " ${sdk})
 endforeach ()
 
-LIST(APPEND PACKAGE_DEPENDENCIES)
+LIST(APPEND PACKAGE_DEPENDENCIES
+    param_io
+    ethercat_sdk_master)
 
 catkin_package(
     INCLUDE_DIRS
