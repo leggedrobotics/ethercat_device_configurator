@@ -24,20 +24,22 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
     <author email="nachtigall@mavt.ethz.ch">Lennart Nachtigall</author>
     <maintainer email="jungerj@student.ethz.ch">Jonas Junger</maintainer>
     <maintainer email="nachtigall@mavt.ethz.ch">Lennart Nachtigall</maintainer>
-    <url type="website">https://github.com/leggedrobotics/ethercat_device_configurator</url>
+  <url type="website">https://github.com/leggedrobotics/ethercat_device_configurator</url>
 
-    <buildtool_depend>catkin</buildtool_depend>
-    <depend>ethercat_sdk_master</depend>
-    <depend>yaml-cpp</depend>
-    <depend>param_io</depend>
-    <!-->
-      Optional dependencies.
-      Any single drive sdk or any combination of sdks may be used.
-    <-->
-      <depend>anydrive_rsl</depend>
-      <depend>elmo_ethercat_sdk</depend>
-      <depend>mps_ethercat_sdk</depend>
-      <depend>maxon_epos_ethercat_sdk</depend>
-      <depend>rokubimini_rsl_ethercat_slave</depend>
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>ethercat_sdk_master</depend>
+  <depend>yaml-cpp</depend>
+  <depend>param_io</depend>
+  <!-->
+    Optional dependencies.
+    Any single drive sdk or any combination of sdks may be used.
+  <-->
+  <depend>anydrive_rsl</depend>
+  <depend>elmo_ethercat_sdk</depend>
+  <depend>mps_ethercat_sdk</depend>
+  <depend>maxon_epos_ethercat_sdk</depend>
+  <depend>rokubimini_rsl_ethercat_slave</depend>
+  <depend>ek1100</depend>
+  <depend>el3102</depend>
 
-    </package>
+</package>

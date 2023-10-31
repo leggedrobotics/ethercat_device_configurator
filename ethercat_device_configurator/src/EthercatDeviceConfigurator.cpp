@@ -48,6 +48,14 @@
 #include "rokubimini_rsl_ethercat_slave/RokubiminiEthercat.hpp"
 #endif
 
+#ifdef _EK1100_FOUND_
+#include "ek1100/EK1100.hpp"
+#endif
+
+#ifdef _EL3102_FOUND_
+#include "el3102/EL3102.hpp"
+#endif
+
 /*yaml-cpp*/
 #include "yaml-cpp/yaml.h"
 
@@ -184,6 +192,10 @@ void EthercatDeviceConfigurator::parseParameter(XmlRpc::XmlRpcValue& params) {
           entry.type = EthercatSlaveType::Anydrive;
         } else if (type_str == "Rokubi") {
           entry.type = EthercatSlaveType::Rokubi;
+        } else if (type_str == "EK1100") {
+          entry.type = EthercatSlaveType::EK1100;
+        } else if (type_str == "EL3102") {
+          entry.type = EthercatSlaveType::EL3102;
         } else {
           throw std::runtime_error("[EthercatDeviceConfigurator] " + entry.name + " is an undefined type of ethercat device");
         }
@@ -319,6 +331,10 @@ void EthercatDeviceConfigurator::parseFile(std::string path) {
           entry.type = EthercatSlaveType::Anydrive;
         } else if (type_str == "Rokubi") {
           entry.type = EthercatSlaveType::Rokubi;
+        } else if (type_str == "EK1100") {
+          entry.type = EthercatSlaveType::EK1100;
+        } else if (type_str == "EL3102") {
+          entry.type = EthercatSlaveType::EL3102;
         } else {
           throw std::runtime_error("[EthercatDeviceConfigurator] " + type_str + " is an undefined type of ethercat device");
         }
@@ -466,7 +482,30 @@ void EthercatDeviceConfigurator::setup(bool startup) {
         throw std::runtime_error("rokubimini_ethercat_sdk configured in ethercat setup.yaml but dependency not found.");
 #endif
       } break;
-
+      case EthercatSlaveType::EK1100: {
+#ifdef _EK1100_FOUND_
+        if (entry.has_config_file) {
+          std::string configuration_file_path = handleFilePath(entry.config_file_path, m_setup_file_path);
+          slave = beckhoff::ek1100::EK1100::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address);
+        } else {
+          throw std::runtime_error("EK1100 configuring from ros1 parameter server not supported yet.");
+        }
+#else
+        throw std::runtime_error("EK1100 configured in ethercat setup.yaml but dependency not found.");
+#endif
+      } break;
+      case EthercatSlaveType::EL3102: {
+#ifdef _EL3102_FOUND_
+        if (entry.has_config_file) {
+          std::string configuration_file_path = handleFilePath(entry.config_file_path, m_setup_file_path);
+          slave = beckhoff::el3102::EL3102::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address);
+        } else {
+          throw std::runtime_error("EL3102 configuring from ros1 parameter server not supported yet.");
+        }
+#else
+        throw std::runtime_error("EL3102 configured in ethercat setup.yaml but dependency not found.");
+#endif
+      } break;
       default:
         throw std::runtime_error("[EthercatDeviceConfigurator] Not existing EthercatSlaveType passed");
         break;

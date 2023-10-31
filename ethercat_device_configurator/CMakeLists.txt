@@ -40,51 +40,62 @@ find_package(elmo_ethercat_sdk QUIET)
 find_package(mps_ethercat_sdk QUIET)
 find_package(maxon_epos_ethercat_sdk QUIET)
 find_package(rokubimini_rsl_ethercat_slave QUIET)
+find_package(ek1100 QUIET)
+find_package(el3102 QUIET)
 
-if(anydrive_rsl_FOUND)
+if (anydrive_rsl_FOUND)
   add_definitions(-D_ANYDRIVE_FOUND_)
   LIST(APPEND PACKAGE_DEPENDENCIES anydrive_rsl)
-endif()
-if(rokubimini_rsl_ethercat_slave_FOUND)
+endif ()
+if (rokubimini_rsl_ethercat_slave_FOUND)
   add_definitions(-D_ROKUBI_FOUND_)
   LIST(APPEND PACKAGE_DEPENDENCIES rokubimini_rsl_ethercat_slave)
-endif()
-if(elmo_ethercat_sdk_FOUND)
+endif ()
+if (elmo_ethercat_sdk_FOUND)
   add_definitions(-D_ELMO_FOUND_)
   LIST(APPEND PACKAGE_DEPENDENCIES elmo_ethercat_sdk)
-endif()
-if(mps_ethercat_sdk_FOUND)
+endif ()
+if (mps_ethercat_sdk_FOUND)
   add_definitions(-D_MPSDRIVE_FOUND_)
   LIST(APPEND PACKAGE_DEPENDENCIES mps_ethercat_sdk)
-endif()
-if(maxon_epos_ethercat_sdk_FOUND)
+endif ()
+if (maxon_epos_ethercat_sdk_FOUND)
   add_definitions(-D_MAXON_FOUND_)
   LIST(APPEND PACKAGE_DEPENDENCIES maxon_epos_ethercat_sdk)
-endif()
+endif ()
+if (ek1100_FOUND)
+  add_definitions(-D_EK1100_FOUND_)
+  LIST(APPEND PACKAGE_DEPENDENCIES ek1100)
+endif ()
+if (el3102_FOUND)
+  add_definitions(-D_EL3102_FOUND_)
+  LIST(APPEND PACKAGE_DEPENDENCIES el3102)
+endif ()
 
-foreach(sdk ${PACKAGE_DEPENDENCIES})
+foreach (sdk ${PACKAGE_DEPENDENCIES})
   message("Found EtherCAT device sdk: " ${sdk})
-endforeach()
+endforeach ()
 
 LIST(APPEND PACKAGE_DEPENDENCIES)
 
 catkin_package(
-        INCLUDE_DIRS
-        include
+    INCLUDE_DIRS
+    include
         LIBRARIES
         ${PROJECT_NAME}
         CATKIN_DEPENDS
         ${PACKAGE_DEPENDENCIES}
 )
 include_directories(
-        include
-        ${anydrive_rsl_INCLUDE_DIRS}
-        ${elmo_ethercat_sdk_INCLUDE_DIRS}
-        ${mps_ethercat_sdk_INCLUDE_DIRS}
-        ${maxon_epos_ethercat_sdk_INCLUDE_DIRS}
-        ${rokubimini_rsl_ethercat_slave_INCLUDE_DIRS}
-        ${catkin_LIBRARIES}
-
+    include
+    ${anydrive_rsl_INCLUDE_DIRS}
+    ${elmo_ethercat_sdk_INCLUDE_DIRS}
+    ${mps_ethercat_sdk_INCLUDE_DIRS}
+    ${maxon_epos_ethercat_sdk_INCLUDE_DIRS}
+    ${rokubimini_rsl_ethercat_slave_INCLUDE_DIRS}
+    ${ek1100_INCLUDE_DIRS}
+    ${el3102_INCLUDE_DIRS}
+    ${catkin_LIBRARIES}
 )
 
 add_library(${PROJECT_NAME}
@@ -99,14 +110,16 @@ add_dependencies(${PROJECT_NAME}
 
 
 target_link_libraries(
-        ${PROJECT_NAME}
-        ${anydrive_rsl_LIBRARIES}
-        ${elmo_ethercat_sdk_LIBRARIES}
-        ${mps_ethercat_sdk_LIBRARIES}
-        ${maxon_epos_ethercat_sdk_LIBRARIES}
-        ${rokubimini_rsl_ethercat_slave_LIBRARIES}
-        ${YAML_CPP_LIBRARIES}
-        stdc++fs
+    ${PROJECT_NAME}
+    ${anydrive_rsl_LIBRARIES}
+    ${elmo_ethercat_sdk_LIBRARIES}
+    ${mps_ethercat_sdk_LIBRARIES}
+    ${maxon_epos_ethercat_sdk_LIBRARIES}
+    ${rokubimini_rsl_ethercat_slave_LIBRARIES}
+    ${ek1100_LIBRARIES}
+    ${el3102_LIBRARIES}
+    ${YAML_CPP_LIBRARIES}
+    stdc++fs
 )
 
 
@@ -116,28 +129,32 @@ add_executable(
 )
 
 add_dependencies(
-        standalone
-        ${PROJECT_NAME}
-        ${anydrive_rsl_EXPORTED_TARGETS}
-        ${rokubimini_rsl_ethercat_slave_EXPORTED_TARGETS}
-        ${elmo_ethercat_sdk_EXPORTED_TARGETS}
-        ${mps_ethercat_sdk_EXPORTED_TARGETS}
-        ${maxon_epos_ethercat_sdk_EXPORTED_TARGETS}
-        ${${PROJECT_NAME}_EXPORTED_TARGETS}
-        ${catkin_EXPORTED_TARGETS}
+    standalone
+    ${PROJECT_NAME}
+    ${anydrive_rsl_EXPORTED_TARGETS}
+    ${rokubimini_rsl_ethercat_slave_EXPORTED_TARGETS}
+    ${elmo_ethercat_sdk_EXPORTED_TARGETS}
+    ${mps_ethercat_sdk_EXPORTED_TARGETS}
+    ${maxon_epos_ethercat_sdk_EXPORTED_TARGETS}
+    ${ek1100_EXPORTED_TARGETS}
+    ${el3102_EXPORTED_TARGETS}
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
 )
 
 target_link_libraries(
-        standalone
-        ${PROJECT_NAME}
-        ${anydrive_rsl_LIBRARIES}
-        ${elmo_ethercat_sdk_LIBRARIES}
-        ${mps_ethercat_sdk_LIBRARIES}
-        ${maxon_epos_ethercat_sdk_LIBRARIES}
-        ${rokubimini_rsl_ethercat_slave_LIBRARIES}
-        ${YAML_CPP_LIBRARIES}
-        -pthread
-        stdc++fs
+    standalone
+    ${PROJECT_NAME}
+    ${anydrive_rsl_LIBRARIES}
+    ${elmo_ethercat_sdk_LIBRARIES}
+    ${mps_ethercat_sdk_LIBRARIES}
+    ${maxon_epos_ethercat_sdk_LIBRARIES}
+    ${rokubimini_rsl_ethercat_slave_LIBRARIES}
+    ${ek1100_LIBRARIES}
+    ${el3102_LIBRARIES}
+    ${YAML_CPP_LIBRARIES}
+    -pthread
+    stdc++fs
 )
 
 install(TARGETS ${PROJECT_NAME} #standalone
