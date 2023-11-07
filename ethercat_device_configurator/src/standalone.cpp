@@ -192,7 +192,7 @@ class ExampleEcatHardwareInterface {
     for (auto& elmo : elmos_) {
       // Set elmos to operation enabled state, there is a option which is blocking s.t the user thread can pause till all elmos are
       // operational
-      elmo->setDriveStateViaPdo(elmo::DriveState::OperationEnabled, true);
+      elmo->setDriveStateViaPdo(elmo::DriveState::OperationEnabled, false);
       // set commands if we can
     }
 #endif
@@ -235,14 +235,16 @@ class ExampleEcatHardwareInterface {
           if (elmo->lastPdoStateChangeSuccessful() && elmo->getReading().getDriveState() == elmo::DriveState::OperationEnabled) {
             elmo::Command command;
             // we would get a command from somewhere here e.g. a feedback controller, shared memory communication, other thread.
-            command.setTargetVelocity(1);
+            command.setTargetVelocity(0.1);
+            MELO_INFO_STREAM("[EthercatDeviceConfiguratorExample] Elmo: " << elmo->getName() << "set velocity");
 
             // this is one concurrent call.
             elmo->stageCommand(command);
           }
           // this is an other concurrent call into the ethercat update loop
           auto reading = elmo->getReading();
-          MELO_INFO_STREAM("[EthercatDeviceConfiguratorExample] Elmo: " << elmo->getName() << " velocity: " << reading.getActualVelocity());
+          MELO_INFO_STREAM("[EthercatDeviceConfiguratorExample] Elmo: " << elmo->getName() << " velocity: " << reading.getActualVelocity()
+                                                                        << " drivestate: " << reading.getDriveState());
         }
 #endif
 #ifdef _MPSDRIVE_FOUND_

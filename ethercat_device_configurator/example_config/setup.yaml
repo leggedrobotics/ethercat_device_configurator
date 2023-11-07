@@ -1,11 +1,11 @@
 ethercat_master_s:
   - name: MyBus1
-    ethercat_bus: enx606d3c413427
+    ethercat_bus: enx606d3cd888bd
     time_step: 0.001
     update_rate_too_low_warn_threshold: 50
     # checks if the pdo size read from the slaves, matches the hardcoded one in the slave sdks.
     # if dynamic PDO mapping is used this check will fail and can therefore be disabled. e.g. Maxon
-    pdo_size_check: true
+    pdo_size_check: false
     #max retires during slave discover on the bus (waiting 1 sec after every try). some slaves might take a bit till started..
     #can be interrupted if startupAbortFlag is nicley wired thru everything.
     slave_discover_retries: 20
@@ -17,26 +17,26 @@ ethercat_master_s:
     error_counter_log: true
 
 ethercat_devices:
-  - type: Anydrive
-    name: Dynadrive1
-    configuration_file: device_configurations/dynadrive.yaml
-    ethercat_bus: enx606d3c413427
+  - type: Elmo
+    name: ElmoTest
+    configuration_file: device_configurations/elmo.yaml
+    ethercat_bus: enx606d3cd888bd
     ethercat_address: 1
-    ethercat_pdo_type: C
+#    ethercat_pdo_type: C
 
-  - type: Anydrive
-    name: Dynadrive2
-    configuration_file: device_configurations/dynadrive.yaml
-    ethercat_bus: enx606d3c413427
-    ethercat_address: 2
-    ethercat_pdo_type: C
-
-  - type: Anydrive
-    name: Dynadrive3
-    configuration_file: device_configurations/dynadrive.yaml
-    ethercat_bus: enx606d3c413427
-    ethercat_address: 3
-    ethercat_pdo_type: C
+#  - type: Anydrive
+#    name: Dynadrive2
+#    configuration_file: device_configurations/dynadrive.yaml
+#    ethercat_bus: enx606d3c413427
+#    ethercat_address: 2
+#    ethercat_pdo_type: C
+#
+#  - type: Anydrive
+#    name: Dynadrive3
+#    configuration_file: device_configurations/dynadrive.yaml
+#    ethercat_bus: enx606d3c413427
+#    ethercat_address: 3
+#    ethercat_pdo_type: C
 
 #  - type: Anydrivecle
 #    name: Dynadrive22222222

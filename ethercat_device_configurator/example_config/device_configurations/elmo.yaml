@@ -13,18 +13,18 @@ Reading:
   fault_storage_capacity:                         100
 
 Hardware:
-  rx_pdo_type:                                    "RxPdoStandard"
-  tx_pdo_type:                                    "TxPdoStandard"
-  mode_of_operation:                              "CyclicSynchronousTorqueMode"
-  use_multiple_modes_of_operation:                true
-  position_encoder_resolution:                    66 # Encoder 'ticks' per encoder revolution
-  gear_ratio:                                     [1,1] # [input revolutions, output revolutions]
-  motor_constant:                                 1.0
-  max_current:                                    5.0
-  motor_rated_current:                            1.0
-  direction:                                      1
-# direction :                                     -1
-  encoder_position:                               motor
+  rx_pdo_type: "RxPdoStandard"
+  tx_pdo_type: "TxPdoStandard"
+  mode_of_operation: "CyclicSynchronousVelocityMode"
+  use_multiple_modes_of_operation: true
+  position_encoder_resolution: 131072 # Encoder 'ticks' per encoder revolution
+  gear_ratio: [ 16,1 ] # [input revolutions, output revolutions]
+  motor_constant: 1.0
+  max_current: 30.0
+  motor_rated_current: 10.0
+  direction: 1
+  # direction :                                     -1
+  encoder_position: motor
 # encoder_position:                               joint
 
 # Explanation for some **Hardware** parameters
