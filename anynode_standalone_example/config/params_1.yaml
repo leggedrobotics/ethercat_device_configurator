@@ -1,0 +1,86 @@
+anydrive_setup:
+  ethercat_master_s:
+    TestBus1:
+      ethercat_bus: enx606d3c413427
+      time_step: 0.001
+      update_rate_too_low_warn_threshold: 50
+      pdo_size_check: true
+      slave_discover_retries: 20
+      bus_diagnosis: true
+      error_counter_log: true
+  ethercat_devices:
+    DynaDrive1:
+      type: Anydrive
+      communication:
+        ethercat_address: 1
+        ethercat_bus: enx606d3c413427
+        ethercat_pdo_type: A
+      configuration:
+        max_current: 20.0
+        max_freeze_current: 15.0
+        dgainFilterCutoffFrequency: 30.0
+        direction: -1
+        goal_states:
+          shutdown: MotorOp
+          startup: ControlOp
+        joint_position_limits:
+          hard:
+            max: 0.0
+            min: 0.0
+          sdk:
+            max: 0.0
+            min: 0.0
+          soft:
+            max: 0.0
+            min: 0.0
+        max_motor_velocity: 40.0
+    DynaDrive2:
+      type: Anydrive
+      communication:
+        ethercat_address: 2
+        ethercat_bus: enx606d3c413427
+        ethercat_pdo_type: A
+      configuration:
+        max_current: 20.0
+        max_freeze_current: 15.0
+        dgainFilterCutoffFrequency: 30.0
+        direction: -1
+        goal_states:
+          shutdown: MotorOp
+          startup: ControlOp
+        joint_position_limits:
+          hard:
+            max: 0.0
+            min: 0.0
+          sdk:
+            max: 0.0
+            min: 0.0
+          soft:
+            max: 0.0
+            min: 0.0
+        max_motor_velocity: 40.0
+    DynaDrive3:
+      type: Anydrive
+      communication:
+        ethercat_address: 3
+        ethercat_bus: enx606d3c413427
+        ethercat_pdo_type: A
+      configuration:
+        max_current: 20.0
+        max_freeze_current: 15.0
+        dgainFilterCutoffFrequency: 30.0
+        direction: -1
+        goal_states:
+          shutdown: MotorOp
+          startup: ControlOp
+        joint_position_limits:
+          hard:
+            max: 0.0
+            min: 0.0
+          sdk:
+            max: 0.0
+            min: 0.0
+          soft:
+            max: 0.0
+            min: 0.0
+        max_motor_velocity: 40.0

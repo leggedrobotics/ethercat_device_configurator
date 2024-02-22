@@ -21,7 +21,7 @@ Requires gcc ≥ 7.5 (default for Ubuntu ≥ 18.04).
 - __optional__ elmo_ethercat_sdk (master)
 - __optional__ maxon_epos_ethercat_sdk (master)
 - ethercat_sdk_master (master)
-- soem_interface (release)
+- soem_interface_rsl (release)
 - message_logger (master)
 - any_node (master)
 - yaml-cpp (system install)

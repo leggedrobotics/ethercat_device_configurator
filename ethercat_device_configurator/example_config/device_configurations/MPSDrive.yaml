@@ -1,0 +1,45 @@
+# Example config file for Elmo Drives
+MPSDrive:
+  config_run_sdo_verify_timeout:                  50000
+  drive_state_change_timeout:                     1000000
+  min_number_of_successful_target_state_readings: 50
+
+Reading: #TODO remove
+  force_append_equal_error:                       true
+  force_append_equal_fault:                       false
+  error_storage_capacity:                         100
+  fault_storage_capacity:                         100
+
+Actuator:
+  kp:                                             0.004 #Nm/rad
+  kd:                                             0.00001 #Nm
+  ki:                                             0.0
+  Softlimits:
+    Upper:                                        0.0 #rad
+    Lower:                                        0.0 #rad
+
+Hardware:
+  rx_pdo_type:                                    "RxPdoImpedance"
+  tx_pdo_type:                                    "TxPdoImpedance"
+  mode_of_operation:                              "PositionVelocityTorquePIDMode"
+  position_encoder_pulses_per_revolution:         16384 # Encoder 'pulses' per encoder revolution
+  gear_ratio:                                     [1,1] # [motor input revolutions, gearbox output revolutions]
+  torque_constant:                                0.017 # [Nm/A]
+  max_current:                                    25.0   # [A], will use the more conservative one
+  max_motor_torque:                               0.5   # [Nm], will use the more conservative one
+  motor_rated_current:                            8.0
+  velocity_filter_cut_off_freq_hz:                400.0
+  direction:                                      1    # -1 or 1 (changes the direction of the motor.)
+Autotune:
+  pole_pairs:                                     12
+  rated_voltage:                                  24.0  # [V]
+  encoder_calibration_current:                    500  # [thousands of rated current. rated_current/1000 * encoder_calibration_current]
+  current_sample_gain:                            5  # [-]
+  current_sample_resistance:                      4  # [mOhm] Shunt Resistor Value.
+  identifiy_type:                                 0  # 0: range unlimited, 1: range unlimited.
+  identify_max_revs:                              50 #max revs allowed during sysID.
+  identify_max_acc_revs:                          10 # max revs during acc. tests.
+  identify_inertia_revs:                          10 #max revs during inertia id.
+
+
+
