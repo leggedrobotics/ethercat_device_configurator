@@ -29,9 +29,13 @@ set(PACKAGE_DEPENDENCIES
 )
 
 find_package(yaml-cpp REQUIRED)
-find_package(catkin REQUIRED)
+find_package(catkin REQUIRED 
+  COMPONENTS
+    param_io
+    ethercat_sdk_master)
 
-find_package(ethercat_sdk_master REQUIRED)
+# find_package(ethercat_sdk_master REQUIRED)
+# find_package(param_io REQUIRED)
 
 find_package(anydrive_rsl QUIET)
 find_package(elmo_ethercat_sdk QUIET)
@@ -81,13 +85,15 @@ LIST(APPEND PACKAGE_DEPENDENCIES
 catkin_package(
     INCLUDE_DIRS
     include
-        LIBRARIES
-        ${PROJECT_NAME}
-        CATKIN_DEPENDS
-        ${PACKAGE_DEPENDENCIES}
+    LIBRARIES
+    ${PROJECT_NAME}
+    CATKIN_DEPENDS
+    ${PACKAGE_DEPENDENCIES}
 )
+
 include_directories(
     include
+    ${catkin_INCLUDE_DIRS}
     ${anydrive_rsl_INCLUDE_DIRS}
     ${elmo_ethercat_sdk_INCLUDE_DIRS}
     ${mps_ethercat_sdk_INCLUDE_DIRS}
@@ -95,7 +101,6 @@ include_directories(
     ${rokubimini_rsl_ethercat_slave_INCLUDE_DIRS}
     ${ek1100_INCLUDE_DIRS}
     ${el3102_INCLUDE_DIRS}
-    ${catkin_LIBRARIES}
 )
 
 add_library(${PROJECT_NAME}
@@ -111,6 +116,7 @@ add_dependencies(${PROJECT_NAME}
 
 target_link_libraries(
     ${PROJECT_NAME}
+    ${catkin_LIBRARIES}
     ${anydrive_rsl_LIBRARIES}
     ${elmo_ethercat_sdk_LIBRARIES}
     ${mps_ethercat_sdk_LIBRARIES}
